@@ -9,9 +9,9 @@ using NuGet.Versioning;
 
 namespace NuGetGallery
 {
-    public static class DisplayPackageViewModelExtensions
+    internal static class DisplayPackageViewModelExtensions
     {
-        public static DisplayPackageViewModel Setup(
+        internal static DisplayPackageViewModel Setup(
             this DisplayPackageViewModel viewModel,
             Package package,
             User currentUser,

@@ -750,7 +750,7 @@ namespace NuGetGallery
             }
 
             var deprecation = _deprecationService.GetDeprecationByPackage(package);
-            var model = new DisplayPackageViewModel().Setup(package, currentUser, deprecation);
+            var model = ViewModelHelper.CreateDisplayPackageViewModel(package, currentUser, deprecation);
 
             model.ValidatingTooLong = _validationService.IsValidatingTooLong(package);
             model.PackageValidationIssues = _validationService.GetLatestPackageValidationIssues(package);
@@ -956,7 +956,7 @@ namespace NuGetGallery
                 throw;
             }
 
-            var model = new DisplayLicenseViewModel().Setup(package, licenseExpressionSegments, licenseFileContents);
+            var model = ViewModelHelper.CreateDisplayLicenseViewModel(package, licenseExpressionSegments, licenseFileContents);
 
             return View(model);
         }
@@ -1550,7 +1550,7 @@ namespace NuGetGallery
                 return HttpForbidden();
             }
 
-            var model = new DeletePackageViewModel().Setup(package, currentUser, DeleteReasons);
+            var model = ViewModelHelper.CreateDeletePackageViewModel(package, currentUser, DeleteReasons);
 
             // Fetch all versions of the package with symbols.
             var versionsWithSymbols = packages

@@ -7,10 +7,10 @@ using NuGet.Services.Entities;
 
 namespace NuGetGallery
 {
-    public static class DeletePackageViewModelExtensions
+    internal static class DeletePackageViewModelExtensions
     {
-        public static DeletePackageViewModel Setup(
-            this DeletePackageViewModel v,
+        internal static DeletePackageViewModel Setup(
+            this DeletePackageViewModel viewModel,
             Package package,
             User currentUser,
             IReadOnlyList<ReportPackageReason> reasons)

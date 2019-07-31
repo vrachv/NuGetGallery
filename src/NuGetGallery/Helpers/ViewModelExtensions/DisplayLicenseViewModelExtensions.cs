@@ -8,9 +8,9 @@ using NuGet.Services.Licenses;
 
 namespace NuGetGallery
 {
-    public static class DisplayLicenseViewModelExtensions
+    internal static class DisplayLicenseViewModelExtensions
     {
-        public static DisplayLicenseViewModel Setup(
+        internal static DisplayLicenseViewModel Setup(
             this DisplayLicenseViewModel viewModel,
             Package package,
             IReadOnlyCollection<CompositeLicenseExpressionSegment> licenseExpressionSegments,
