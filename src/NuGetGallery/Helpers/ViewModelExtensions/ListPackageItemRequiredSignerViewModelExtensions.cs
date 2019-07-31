@@ -9,7 +9,7 @@ using NuGetGallery.Security;
 
 namespace NuGetGallery
 {
-    internal static class ListPackageItemRequiredSignerViewModelExtensions
+    public partial class ViewModelHelper
     {
         // username must be an empty string because <select /> option values are based on username
         // and this "user" must be distinguishable from an account named "Any" and any other user;
@@ -18,13 +18,13 @@ namespace NuGetGallery
             new SignerViewModel(username: "", displayText: "Any");
 
         internal static ListPackageItemRequiredSignerViewModel SetupListPackageItemRequiredSignerViewModel(
-            this ListPackageItemRequiredSignerViewModel viewModel,
+            ListPackageItemRequiredSignerViewModel viewModel,
             Package package,
             User currentUser,
             ISecurityPolicyService securityPolicyService,
             bool wasAADLoginOrMultiFactorAuthenticated)
         {
-            ((ListPackageItemViewModel)viewModel).SetupListPackageItemViewModel(package, currentUser);
+            SetupListPackageItemViewModel(viewModel, package, currentUser);
 
             if (currentUser == null)
             {

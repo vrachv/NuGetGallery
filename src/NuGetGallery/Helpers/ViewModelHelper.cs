@@ -16,7 +16,8 @@ namespace NuGetGallery
             User currentUser,
             IReadOnlyList<ReportPackageReason> reasons)
         {
-            return new DeletePackageViewModel().SetupDeletePackageViewModel(package, currentUser, reasons);
+            var viewModel = new DeletePackageViewModel();
+            return SetupDeletePackageViewModel(viewModel, package, currentUser, reasons);
         }
 
         public static DisplayLicenseViewModel CreateDisplayLicenseViewModel(
@@ -24,7 +25,8 @@ namespace NuGetGallery
             IReadOnlyCollection<CompositeLicenseExpressionSegment> licenseExpressionSegments,
             string licenseFileContents)
         {
-            return new DisplayLicenseViewModel().SetupDisplayLicenseViewModel(package, licenseExpressionSegments, licenseFileContents);
+            var viewModel = new DisplayLicenseViewModel();
+            return SetupDisplayLicenseViewModel(viewModel, package, licenseExpressionSegments, licenseFileContents);
         }
 
         public static DisplayPackageViewModel CreateDisplayPackageViewModel(
@@ -32,7 +34,8 @@ namespace NuGetGallery
             User currentUser,
             PackageDeprecation deprecation)
         {
-            return new DisplayPackageViewModel().SetupDisplayPackageViewModel(package, currentUser, deprecation);
+            var viewModel = new DisplayPackageViewModel();
+            return SetupDisplayPackageViewModel(viewModel, package, currentUser, deprecation);
         }
 
         public static ListPackageItemRequiredSignerViewModel CreateListPackageItemRequiredSignerViewModel(
@@ -41,12 +44,14 @@ namespace NuGetGallery
             ISecurityPolicyService securityPolicyService,
             bool wasAADLoginOrMultiFactorAuthenticated)
         {
-            return new ListPackageItemRequiredSignerViewModel().SetupListPackageItemRequiredSignerViewModel(package, currentUser, securityPolicyService, wasAADLoginOrMultiFactorAuthenticated);
+            var viewModel = new ListPackageItemRequiredSignerViewModel();
+            return SetupListPackageItemRequiredSignerViewModel(viewModel, package, currentUser, securityPolicyService, wasAADLoginOrMultiFactorAuthenticated);
         }
 
         public static ListPackageItemViewModel CreateListPackageItemViewModel(Package package, User currentUser)
         {
-            return new ListPackageItemViewModel().SetupListPackageItemViewModel(package, currentUser);
+            var viewModel = new ListPackageItemViewModel();
+            return SetupListPackageItemViewModel(viewModel, package, currentUser);
         }
 
         public static ManagePackageViewModel CreateManagePackageViewModel(
@@ -57,7 +62,14 @@ namespace NuGetGallery
             string readMe,
             bool isManageDeprecationEnabled)
         {
-            return new ManagePackageViewModel().SetupManagePackageViewModel(package, currentUser, reasons, url, readMe, isManageDeprecationEnabled);
+            var viewModel = new ManagePackageViewModel();
+            return SetupManagePackageViewModel(viewModel, package, currentUser, reasons, url, readMe, isManageDeprecationEnabled);
+        }
+
+        public static PackageViewModel CreatePackageViewModel(Package package)
+        {
+            var viewModel = new PackageViewModel();
+            return SetupPackageViewModel(viewModel, package);
         }
     }
 }

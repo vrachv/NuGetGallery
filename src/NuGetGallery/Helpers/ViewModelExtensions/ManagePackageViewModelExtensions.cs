@@ -10,10 +10,10 @@ using NuGet.Versioning;
 
 namespace NuGetGallery
 {
-    internal static class ManagePackageViewModelExtensions
+    public partial class ViewModelHelper
     {
         internal static ManagePackageViewModel SetupManagePackageViewModel(
-            this ManagePackageViewModel viewModel,
+            ManagePackageViewModel viewModel,
             Package package,
             User currentUser,
             IReadOnlyList<ReportPackageReason> reasons,
@@ -21,7 +21,7 @@ namespace NuGetGallery
             string readMe,
             bool isManageDeprecationEnabled)
         {
-            ((ListPackageItemViewModel)viewModel).SetupListPackageItemViewModel(package, currentUser);
+            SetupListPackageItemViewModel(viewModel, package, currentUser);
 
             viewModel.IsCurrentUserAnAdmin = currentUser != null && currentUser.IsAdministrator;
 

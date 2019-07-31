@@ -383,7 +383,7 @@ namespace NuGetGallery
             User currentUser)
         {
             var viewModel = new DeleteAccountListPackageItemViewModel();
-            ((ListPackageItemViewModel)viewModel).SetupListPackageItemViewModel(package, currentUser);
+            ViewModelHelper.SetupListPackageItemViewModel(viewModel, package, currentUser);
             viewModel.WillBeOrphaned = PackageService.WillPackageBeOrphanedIfOwnerRemoved(package.PackageRegistration, userToDelete);
             return viewModel;
         }

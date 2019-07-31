@@ -6,9 +6,9 @@ using NuGet.Services.Entities;
 
 namespace NuGetGallery
 {
-    internal static class PackageViewModelExtensions
+    public partial class ViewModelHelper
     {
-        internal static PackageViewModel SetupPackageViewModel(this PackageViewModel viewModel, Package package)
+        internal static PackageViewModel SetupPackageViewModel(PackageViewModel viewModel, Package package)
         {
             if (viewModel == null)
             {

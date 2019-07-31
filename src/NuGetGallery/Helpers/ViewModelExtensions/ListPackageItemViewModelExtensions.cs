@@ -6,11 +6,11 @@ using NuGet.Services.Entities;
 
 namespace NuGetGallery
 {
-    internal static class ListPackageItemViewModelExtensions
+    public partial class ViewModelHelper
     {
-        internal static ListPackageItemViewModel SetupListPackageItemViewModel(this ListPackageItemViewModel viewModel, Package package, User currentUser)
+        internal static ListPackageItemViewModel SetupListPackageItemViewModel(ListPackageItemViewModel viewModel, Package package, User currentUser)
         {
-            ((PackageViewModel)viewModel).SetupPackageViewModel(package);
+            SetupPackageViewModel(viewModel, package);
 
             viewModel.Tags = package.Tags?
                 .Split(' ')

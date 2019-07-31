@@ -9,15 +9,15 @@ using NuGet.Versioning;
 
 namespace NuGetGallery
 {
-    internal static class DisplayPackageViewModelExtensions
+    public partial class ViewModelHelper
     {
         internal static DisplayPackageViewModel SetupDisplayPackageViewModel(
-            this DisplayPackageViewModel viewModel,
+            DisplayPackageViewModel viewModel,
             Package package,
             User currentUser,
             PackageDeprecation deprecation)
         {
-            viewModel.SetupDisplayViewModelCommon(package, currentUser, pushedBy: null);
+            SetupDisplayViewModelCommon(viewModel, package, currentUser, pushedBy: null);
 
             viewModel.HasSemVer2Version = viewModel.NuGetVersion.IsSemVer2;
             viewModel.HasSemVer2Dependency = package.Dependencies.ToList()
@@ -35,8 +35,11 @@ namespace NuGetGallery
             var pushedByCache = new Dictionary<User, string>();
             viewModel.PackageVersions = packageHistory
                 .Select(
-                    p => new DisplayPackageViewModel()
-                        .SetupDisplayViewModelCommon(p, currentUser, GetPushedBy(p, currentUser, pushedByCache)))
+                    p => 
+                    {
+                        var vm = new DisplayPackageViewModel();
+                        return SetupDisplayViewModelCommon(vm, p, currentUser, GetPushedBy(p, currentUser, pushedByCache));
+                    })
                 .ToList();
 
             viewModel.PushedBy = GetPushedBy(package, currentUser, pushedByCache);
@@ -78,12 +81,12 @@ namespace NuGetGallery
         }
 
         private static DisplayPackageViewModel SetupDisplayViewModelCommon(
-            this DisplayPackageViewModel viewModel,
+            DisplayPackageViewModel viewModel,
             Package package,
             User currentUser,
             string pushedBy)
         {
-            ((ListPackageItemViewModel)viewModel).SetupListPackageItemViewModel(package, currentUser);
+            SetupListPackageItemViewModel(viewModel, package, currentUser);
 
             viewModel.NuGetVersion = NuGetVersion.Parse(NuGetVersionFormatter.ToFullString(package.Version));
             viewModel.Copyright = package.Copyright;

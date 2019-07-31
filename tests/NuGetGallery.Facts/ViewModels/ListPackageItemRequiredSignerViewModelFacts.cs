@@ -37,8 +37,7 @@ namespace NuGetGallery.ViewModels
         [Fact]
         public void SetupExtension_WhenPackageIsNull_Throws()
         {
-            var target = new ListPackageItemRequiredSignerViewModel();
-            var exception = Assert.Throws<ArgumentNullException>(() => target.Setup(
+            var exception = Assert.Throws<ArgumentNullException>(() => ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
                 package: null,
                 currentUser: _currentUser,
                 securityPolicyService: _securityPolicyService.Object,
@@ -55,10 +54,8 @@ namespace NuGetGallery.ViewModels
                 PackageRegistration = new PackageRegistration(),
                 Version = "1.0.0"
             };
-            var target = new ListPackageItemRequiredSignerViewModel();
-
             var exception = Assert.Throws<ArgumentNullException>(
-                () => target.Setup(
+                () => ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
                     package,
                     currentUser: null,
                     securityPolicyService: _securityPolicyService.Object,
@@ -75,10 +72,8 @@ namespace NuGetGallery.ViewModels
                 PackageRegistration = new PackageRegistration(),
                 Version = "1.0.0"
             };
-            var target = new ListPackageItemRequiredSignerViewModel();
-
             var exception = Assert.Throws<ArgumentNullException>(
-                () => target.Setup(
+                () => ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
                     package,
                     _currentUser,
                     securityPolicyService: null,
@@ -103,9 +98,8 @@ namespace NuGetGallery.ViewModels
                     It.Is<User>(user => user == _currentUser),
                     It.Is<string>(policyName => policyName == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(false);
-            var target = new ListPackageItemRequiredSignerViewModel();
 
-            var viewModel = target.Setup(
+            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
                 _securityPolicyService.Object,
@@ -134,14 +128,13 @@ namespace NuGetGallery.ViewModels
                 },
                 Version = "1.0.0"
             };
-            var target = new ListPackageItemRequiredSignerViewModel();
 
             _securityPolicyService.Setup(x => x.IsSubscribed(
                     It.Is<User>(user => user == _currentUser),
                     It.Is<string>(policyName => policyName == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(false);
 
-            var viewModel = target.Setup(
+            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
                 _securityPolicyService.Object,
@@ -170,14 +163,13 @@ namespace NuGetGallery.ViewModels
                 },
                 Version = "1.0.0"
             };
-            var target = new ListPackageItemRequiredSignerViewModel();
 
             _securityPolicyService.Setup(x => x.IsSubscribed(
                     It.Is<User>(user => user == _currentUser),
                     It.Is<string>(policyName => policyName == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(false);
 
-            var viewModel = target.Setup(
+            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
                 _securityPolicyService.Object,
@@ -205,7 +197,6 @@ namespace NuGetGallery.ViewModels
                 },
                 Version = "1.0.0"
             };
-            var target = new ListPackageItemRequiredSignerViewModel();
 
             _securityPolicyService.Setup(
                 x => x.IsSubscribed(
@@ -213,7 +204,7 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(false);
 
-            var viewModel = target.Setup(
+            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
                 _securityPolicyService.Object,
@@ -241,7 +232,6 @@ namespace NuGetGallery.ViewModels
                 },
                 Version = "1.0.0"
             };
-            var target = new ListPackageItemRequiredSignerViewModel();
 
             _securityPolicyService.Setup(
                 x => x.IsSubscribed(
@@ -249,7 +239,7 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(false);
 
-            var viewModel = target.Setup(
+            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
                 _securityPolicyService.Object,
@@ -292,7 +282,6 @@ namespace NuGetGallery.ViewModels
                 },
                 Version = "1.0.0"
             };
-            var target = new ListPackageItemRequiredSignerViewModel();
 
             _securityPolicyService.Setup(
                 x => x.IsSubscribed(
@@ -300,7 +289,7 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(false);
 
-            var viewModel = target.Setup(
+            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
                 _securityPolicyService.Object,
@@ -329,7 +318,6 @@ namespace NuGetGallery.ViewModels
                 },
                 Version = "1.0.0"
             };
-            var target = new ListPackageItemRequiredSignerViewModel();
 
             _securityPolicyService.Setup(
                 x => x.IsSubscribed(
@@ -337,7 +325,7 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(false);
 
-            var viewModel = target.Setup(
+            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
                 _securityPolicyService.Object,
@@ -366,7 +354,6 @@ namespace NuGetGallery.ViewModels
                 },
                 Version = "1.0.0"
             };
-            var target = new ListPackageItemRequiredSignerViewModel();
 
             _securityPolicyService.Setup(
                 x => x.IsSubscribed(
@@ -374,7 +361,7 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(false);
 
-            var viewModel = target.Setup(
+            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
                 _securityPolicyService.Object,
@@ -430,7 +417,6 @@ namespace NuGetGallery.ViewModels
                 },
                 Version = "1.0.0"
             };
-            var target = new ListPackageItemRequiredSignerViewModel();
 
             _securityPolicyService.Setup(
                 x => x.IsSubscribed(
@@ -438,7 +424,7 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(false);
 
-            var viewModel = target.Setup(
+            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
                 package,
                 currentUser,
                 _securityPolicyService.Object,
@@ -467,7 +453,6 @@ namespace NuGetGallery.ViewModels
                 },
                 Version = "1.0.0"
             };
-            var target = new ListPackageItemRequiredSignerViewModel();
 
             _securityPolicyService.Setup(
                 x => x.IsSubscribed(
@@ -475,7 +460,7 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(true);
 
-            var viewModel = target.Setup(
+            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
                 _securityPolicyService.Object,
@@ -504,7 +489,6 @@ namespace NuGetGallery.ViewModels
                 },
                 Version = "1.0.0"
             };
-            var target = new ListPackageItemRequiredSignerViewModel();
 
             _securityPolicyService.Setup(
                 x => x.IsSubscribed(
@@ -517,7 +501,7 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(true);
 
-            var viewModel = target.Setup(
+            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
                 _securityPolicyService.Object,
@@ -552,7 +536,6 @@ namespace NuGetGallery.ViewModels
                 },
                 Version = "1.0.0"
             };
-            var target = new ListPackageItemRequiredSignerViewModel();
 
             _securityPolicyService.Setup(
                 x => x.IsSubscribed(
@@ -570,7 +553,7 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(true);
 
-            var viewModel = target.Setup(
+            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
                 _securityPolicyService.Object,
@@ -611,7 +594,6 @@ namespace NuGetGallery.ViewModels
                 },
                 Version = "1.0.0"
             };
-            var target = new ListPackageItemRequiredSignerViewModel();
 
             _securityPolicyService.Setup(
                 x => x.IsSubscribed(
@@ -634,7 +616,7 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(true);
 
-            var viewModel = target.Setup(
+            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
                 _securityPolicyService.Object,

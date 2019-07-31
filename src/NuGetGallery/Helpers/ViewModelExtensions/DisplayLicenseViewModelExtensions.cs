@@ -8,15 +8,15 @@ using NuGet.Services.Licenses;
 
 namespace NuGetGallery
 {
-    internal static class DisplayLicenseViewModelExtensions
+    public partial class ViewModelHelper
     {
         internal static DisplayLicenseViewModel SetupDisplayLicenseViewModel(
-            this DisplayLicenseViewModel viewModel,
+            DisplayLicenseViewModel viewModel,
             Package package,
             IReadOnlyCollection<CompositeLicenseExpressionSegment> licenseExpressionSegments,
             string licenseFileContents)
         {
-            ((PackageViewModel)viewModel).SetupPackageViewModel(package);
+            SetupPackageViewModel(viewModel, package);
 
             viewModel.EmbeddedLicenseType = package.EmbeddedLicenseType;
             viewModel.LicenseExpression = package.LicenseExpression;
