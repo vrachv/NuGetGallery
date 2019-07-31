@@ -11,7 +11,7 @@ namespace NuGetGallery
 {
     internal static class DisplayPackageViewModelExtensions
     {
-        internal static DisplayPackageViewModel Setup(
+        internal static DisplayPackageViewModel SetupDisplayPackageViewModel(
             this DisplayPackageViewModel viewModel,
             Package package,
             User currentUser,
@@ -83,7 +83,7 @@ namespace NuGetGallery
             User currentUser,
             string pushedBy)
         {
-            ((ListPackageItemViewModel)viewModel).Setup(package, currentUser);
+            ((ListPackageItemViewModel)viewModel).SetupListPackageItemViewModel(package, currentUser);
 
             viewModel.NuGetVersion = NuGetVersion.Parse(NuGetVersionFormatter.ToFullString(package.Version));
             viewModel.Copyright = package.Copyright;

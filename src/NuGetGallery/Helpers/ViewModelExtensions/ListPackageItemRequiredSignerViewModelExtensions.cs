@@ -17,14 +17,14 @@ namespace NuGetGallery
         private static readonly SignerViewModel AnySigner =
             new SignerViewModel(username: "", displayText: "Any");
 
-        internal static ListPackageItemRequiredSignerViewModel Setup(
+        internal static ListPackageItemRequiredSignerViewModel SetupListPackageItemRequiredSignerViewModel(
             this ListPackageItemRequiredSignerViewModel viewModel,
             Package package,
             User currentUser,
             ISecurityPolicyService securityPolicyService,
             bool wasAADLoginOrMultiFactorAuthenticated)
         {
-            ((ListPackageItemViewModel)viewModel).Setup(package, currentUser);
+            ((ListPackageItemViewModel)viewModel).SetupListPackageItemViewModel(package, currentUser);
 
             if (currentUser == null)
             {

@@ -8,9 +8,9 @@ namespace NuGetGallery
 {
     internal static class ListPackageItemViewModelExtensions
     {
-        internal static ListPackageItemViewModel Setup(this ListPackageItemViewModel viewModel, Package package, User currentUser)
+        internal static ListPackageItemViewModel SetupListPackageItemViewModel(this ListPackageItemViewModel viewModel, Package package, User currentUser)
         {
-            ((PackageViewModel)viewModel).Setup(package);
+            ((PackageViewModel)viewModel).SetupPackageViewModel(package);
 
             viewModel.Tags = package.Tags?
                 .Split(' ')

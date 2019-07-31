@@ -8,7 +8,7 @@ namespace NuGetGallery
 {
     internal static class PackageViewModelExtensions
     {
-        internal static PackageViewModel Setup(this PackageViewModel viewModel, Package package)
+        internal static PackageViewModel SetupPackageViewModel(this PackageViewModel viewModel, Package package)
         {
             if (viewModel == null)
             {

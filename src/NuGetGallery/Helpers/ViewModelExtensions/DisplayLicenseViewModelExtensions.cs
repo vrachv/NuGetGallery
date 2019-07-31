@@ -10,13 +10,13 @@ namespace NuGetGallery
 {
     internal static class DisplayLicenseViewModelExtensions
     {
-        internal static DisplayLicenseViewModel Setup(
+        internal static DisplayLicenseViewModel SetupDisplayLicenseViewModel(
             this DisplayLicenseViewModel viewModel,
             Package package,
             IReadOnlyCollection<CompositeLicenseExpressionSegment> licenseExpressionSegments,
             string licenseFileContents)
         {
-            ((PackageViewModel)viewModel).Setup(package);
+            ((PackageViewModel)viewModel).SetupPackageViewModel(package);
 
             viewModel.EmbeddedLicenseType = package.EmbeddedLicenseType;
             viewModel.LicenseExpression = package.LicenseExpression;

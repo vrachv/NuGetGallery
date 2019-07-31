@@ -9,13 +9,13 @@ namespace NuGetGallery
 {
     internal static class DeletePackageViewModelExtensions
     {
-        internal static DeletePackageViewModel Setup(
+        internal static DeletePackageViewModel SetupDeletePackageViewModel(
             this DeletePackageViewModel viewModel,
             Package package,
             User currentUser,
             IReadOnlyList<ReportPackageReason> reasons)
         {
-            ((DisplayPackageViewModel)viewModel).Setup(package, currentUser, deprecation: null);
+            ((DisplayPackageViewModel)viewModel).SetupDisplayPackageViewModel(package, currentUser, deprecation: null);
 
             viewModel.DeletePackagesRequest = new DeletePackagesRequest
             {

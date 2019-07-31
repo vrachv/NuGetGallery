@@ -12,7 +12,7 @@ namespace NuGetGallery
 {
     internal static class ManagePackageViewModelExtensions
     {
-        internal static ManagePackageViewModel Setup(
+        internal static ManagePackageViewModel SetupManagePackageViewModel(
             this ManagePackageViewModel viewModel,
             Package package,
             User currentUser,
@@ -21,7 +21,7 @@ namespace NuGetGallery
             string readMe,
             bool isManageDeprecationEnabled)
         {
-            ((ListPackageItemViewModel)viewModel).Setup(package, currentUser);
+            ((ListPackageItemViewModel)viewModel).SetupListPackageItemViewModel(package, currentUser);
 
             viewModel.IsCurrentUserAnAdmin = currentUser != null && currentUser.IsAdministrator;
 
