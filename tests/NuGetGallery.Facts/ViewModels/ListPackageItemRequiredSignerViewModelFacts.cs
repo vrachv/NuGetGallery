@@ -37,10 +37,9 @@ namespace NuGetGallery.ViewModels
         [Fact]
         public void SetupExtension_WhenPackageIsNull_Throws()
         {
-            var exception = Assert.Throws<ArgumentNullException>(() => ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
+            var exception = Assert.Throws<ArgumentNullException>(() => new ViewModelHelper(_securityPolicyService.Object).CreateListPackageItemRequiredSignerViewModel(
                 package: null,
                 currentUser: _currentUser,
-                securityPolicyService: _securityPolicyService.Object,
                 wasAADLoginOrMultiFactorAuthenticated: true));
 
             Assert.Equal("package", exception.ParamName);
@@ -55,10 +54,9 @@ namespace NuGetGallery.ViewModels
                 Version = "1.0.0"
             };
             var exception = Assert.Throws<ArgumentNullException>(
-                () => ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
+                () => new ViewModelHelper(_securityPolicyService.Object).CreateListPackageItemRequiredSignerViewModel(
                     package,
                     currentUser: null,
-                    securityPolicyService: _securityPolicyService.Object,
                     wasAADLoginOrMultiFactorAuthenticated: true));
 
             Assert.Equal("currentUser", exception.ParamName);
@@ -73,10 +71,9 @@ namespace NuGetGallery.ViewModels
                 Version = "1.0.0"
             };
             var exception = Assert.Throws<ArgumentNullException>(
-                () => ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
+                () => new ViewModelHelper(_securityPolicyService.Object).CreateListPackageItemRequiredSignerViewModel(
                     package,
                     _currentUser,
-                    securityPolicyService: null,
                     wasAADLoginOrMultiFactorAuthenticated: true));
 
             Assert.Equal("securityPolicyService", exception.ParamName);
@@ -99,10 +96,9 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(policyName => policyName == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(false);
 
-            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
+            var viewModel = new ViewModelHelper(_securityPolicyService.Object).CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
-                _securityPolicyService.Object,
                 wasAADLoginOrMultiFactorAuthenticated: true);
 
             Assert.Equal(_currentUser.Username, viewModel.RequiredSigner.Username);
@@ -134,10 +130,9 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(policyName => policyName == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(false);
 
-            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
+            var viewModel = new ViewModelHelper(_securityPolicyService.Object).CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
-                _securityPolicyService.Object,
                 wasAADLoginOrMultiFactorAuthenticated: true);
 
             Assert.Equal(_currentUser.Username, viewModel.RequiredSigner.Username);
@@ -169,10 +164,9 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(policyName => policyName == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(false);
 
-            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
+            var viewModel = new ViewModelHelper(_securityPolicyService.Object).CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
-                _securityPolicyService.Object,
                 wasAADLoginOrMultiFactorAuthenticated: true);
 
             Assert.Equal(_otherUser.Username, viewModel.RequiredSigner.Username);
@@ -204,10 +198,9 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(false);
 
-            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
+            var viewModel = new ViewModelHelper(_securityPolicyService.Object).CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
-                _securityPolicyService.Object,
                 wasAADLoginOrMultiFactorAuthenticated: true);
 
             Assert.Equal(string.Empty, viewModel.RequiredSigner.Username);
@@ -239,10 +232,9 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(false);
 
-            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
+            var viewModel = new ViewModelHelper(_securityPolicyService.Object).CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
-                _securityPolicyService.Object,
                 wasAADLoginOrMultiFactorAuthenticated: false);
 
             Assert.Equal(string.Empty, viewModel.RequiredSigner.Username);
@@ -289,10 +281,9 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(false);
 
-            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
+            var viewModel = new ViewModelHelper(_securityPolicyService.Object).CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
-                _securityPolicyService.Object,
                 wasAADLoginOrMultiFactorAuthenticated: true);
 
             Assert.Equal("c", viewModel.RequiredSigner.Username);
@@ -325,10 +316,9 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(false);
 
-            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
+            var viewModel = new ViewModelHelper(_securityPolicyService.Object).CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
-                _securityPolicyService.Object,
                 wasAADLoginOrMultiFactorAuthenticated: true);
 
             Assert.Equal(_currentUser.Username, viewModel.RequiredSigner.Username);
@@ -361,10 +351,9 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(false);
 
-            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
+            var viewModel = new ViewModelHelper(_securityPolicyService.Object).CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
-                _securityPolicyService.Object,
                 wasAADLoginOrMultiFactorAuthenticated: true);
 
             Assert.Equal(_otherUser.Username, viewModel.RequiredSigner.Username);
@@ -424,10 +413,9 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(false);
 
-            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
+            var viewModel = new ViewModelHelper(_securityPolicyService.Object).CreateListPackageItemRequiredSignerViewModel(
                 package,
                 currentUser,
-                _securityPolicyService.Object,
                 wasAADLoginOrMultiFactorAuthenticated: true);
 
             Assert.Equal(currentUser.Username, viewModel.RequiredSigner.Username);
@@ -460,10 +448,9 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(true);
 
-            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
+            var viewModel = new ViewModelHelper(_securityPolicyService.Object).CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
-                _securityPolicyService.Object,
                 wasAADLoginOrMultiFactorAuthenticated: true);
 
             Assert.Equal(_currentUser.Username, viewModel.RequiredSigner.Username);
@@ -501,10 +488,9 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(true);
 
-            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
+            var viewModel = new ViewModelHelper(_securityPolicyService.Object).CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
-                _securityPolicyService.Object,
                 wasAADLoginOrMultiFactorAuthenticated: true);
 
             Assert.Equal(_otherUser.Username, viewModel.RequiredSigner.Username);
@@ -553,10 +539,9 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(true);
 
-            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
+            var viewModel = new ViewModelHelper(_securityPolicyService.Object).CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
-                _securityPolicyService.Object,
                 wasAADLoginOrMultiFactorAuthenticated: true);
 
             Assert.Equal(_currentUser.Username, viewModel.RequiredSigner.Username);
@@ -616,10 +601,9 @@ namespace NuGetGallery.ViewModels
                     It.Is<string>(s => s == ControlRequiredSignerPolicy.PolicyName)))
                 .Returns(true);
 
-            var viewModel = ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(
+            var viewModel = new ViewModelHelper(_securityPolicyService.Object).CreateListPackageItemRequiredSignerViewModel(
                 package,
                 _currentUser,
-                _securityPolicyService.Object,
                 wasAADLoginOrMultiFactorAuthenticated: true);
 
             Assert.Equal(_otherUser.Username, viewModel.RequiredSigner.Username);

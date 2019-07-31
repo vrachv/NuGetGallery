@@ -18,19 +18,22 @@ namespace NuGetGallery
         private readonly ITelemetryService _telemetryService;
         private readonly IMessageService _messageService;
         private readonly IMessageServiceConfiguration _messageServiceConfiguration;
+        private readonly IViewModelHelper _viewModelHelper;
 
         public SearchSideBySideService(
             ISearchService oldSearchService,
             ISearchService newSearchService,
             ITelemetryService telemetryService,
             IMessageService messageService,
-            IMessageServiceConfiguration messageServiceConfiguration)
+            IMessageServiceConfiguration messageServiceConfiguration,
+            IViewModelHelper viewModelHelper)
         {
             _oldSearchService = oldSearchService ?? throw new ArgumentNullException(nameof(oldSearchService));
             _newSearchService = newSearchService ?? throw new ArgumentNullException(nameof(newSearchService));
             _telemetryService = telemetryService ?? throw new ArgumentNullException(nameof(telemetryService));
             _messageService = messageService ?? throw new ArgumentNullException(nameof(messageService));
             _messageServiceConfiguration = messageServiceConfiguration ?? throw new ArgumentNullException(nameof(messageServiceConfiguration));
+            _viewModelHelper = viewModelHelper ?? throw new ArgumentNullException(nameof(viewModelHelper));
         }
 
         public async Task<SearchSideBySideViewModel> SearchAsync(string searchTerm, User currentUser)
@@ -53,10 +56,10 @@ namespace NuGetGallery
                     SearchTerm = searchTerm,
                     OldSuccess = SearchResults.IsSuccessful(oldResults),
                     OldHits = oldResults.Hits,
-                    OldItems = oldResults.Data.Select(x => ViewModelHelper.CreateListPackageItemViewModel(x, currentUser)).ToList(),
+                    OldItems = oldResults.Data.Select(x => _viewModelHelper.CreateListPackageItemViewModel(x, currentUser)).ToList(),
                     NewSuccess = SearchResults.IsSuccessful(newResults),
                     NewHits = newResults.Hits,
-                    NewItems = newResults.Data.Select(x => ViewModelHelper.CreateListPackageItemViewModel(x, currentUser)).ToList(),
+                    NewItems = newResults.Data.Select(x => _viewModelHelper.CreateListPackageItemViewModel(x, currentUser)).ToList(),
                 };
 
                 _telemetryService.TrackSearchSideBySide(

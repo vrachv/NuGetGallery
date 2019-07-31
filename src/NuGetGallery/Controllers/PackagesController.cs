@@ -114,6 +114,7 @@ namespace NuGetGallery
         private readonly IFeatureFlagService _featureFlagService;
         private readonly IPackageDeprecationService _deprecationService;
         private readonly IABTestService _abTestService;
+        private readonly IViewModelHelper _viewModelHelper;
 
         public PackagesController(
             IPackageService packageService,
@@ -145,7 +146,8 @@ namespace NuGetGallery
             ILicenseExpressionSplitter licenseExpressionSplitter,
             IFeatureFlagService featureFlagService,
             IPackageDeprecationService deprecationService,
-            IABTestService abTestService)
+            IABTestService abTestService,
+            IViewModelHelper viewModelHelper)
         {
             _packageService = packageService;
             _packageUpdateService = packageUpdateService ?? throw new ArgumentNullException(nameof(packageUpdateService));
@@ -177,6 +179,7 @@ namespace NuGetGallery
             _featureFlagService = featureFlagService ?? throw new ArgumentNullException(nameof(featureFlagService));
             _deprecationService = deprecationService ?? throw new ArgumentNullException(nameof(deprecationService));
             _abTestService = abTestService ?? throw new ArgumentNullException(nameof(abTestService));
+            _viewModelHelper = viewModelHelper ?? throw new ArgumentNullException(nameof(viewModelHelper));
         }
 
         [HttpGet]
@@ -750,7 +753,7 @@ namespace NuGetGallery
             }
 
             var deprecation = _deprecationService.GetDeprecationByPackage(package);
-            var model = ViewModelHelper.CreateDisplayPackageViewModel(package, currentUser, deprecation);
+            var model = _viewModelHelper.CreateDisplayPackageViewModel(package, currentUser, deprecation);
 
             model.ValidatingTooLong = _validationService.IsValidatingTooLong(package);
             model.PackageValidationIssues = _validationService.GetLatestPackageValidationIssues(package);
@@ -956,7 +959,7 @@ namespace NuGetGallery
                 throw;
             }
 
-            var model = ViewModelHelper.CreateDisplayLicenseViewModel(package, licenseExpressionSegments, licenseFileContents);
+            var model = _viewModelHelper.CreateDisplayLicenseViewModel(package, licenseExpressionSegments, licenseFileContents);
 
             return View(model);
         }
@@ -1042,7 +1045,7 @@ namespace NuGetGallery
 
             var currentUser = GetCurrentUser();
             var items = results.Data
-                .Select(pv => ViewModelHelper.CreateListPackageItemViewModel(pv, currentUser))
+                .Select(pv => _viewModelHelper.CreateListPackageItemViewModel(pv, currentUser))
                 .ToList();
 
             var viewModel = new PackageListViewModel(
@@ -1501,7 +1504,7 @@ namespace NuGetGallery
             }
 
             var currentUser = GetCurrentUser();
-            var model = ViewModelHelper.CreateManagePackageViewModel(
+            var model = _viewModelHelper.CreateManagePackageViewModel(
                 package,
                 GetCurrentUser(),
                 ReportMyPackageReasons,
@@ -1550,7 +1553,7 @@ namespace NuGetGallery
                 return HttpForbidden();
             }
 
-            var model = ViewModelHelper.CreateDeletePackageViewModel(package, currentUser, DeleteReasons);
+            var model = _viewModelHelper.CreateDeletePackageViewModel(package, currentUser, DeleteReasons);
 
             // Fetch all versions of the package with symbols.
             var versionsWithSymbols = packages

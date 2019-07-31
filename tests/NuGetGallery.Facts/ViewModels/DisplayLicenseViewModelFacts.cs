@@ -1,8 +1,10 @@
-﻿﻿// Copyright (c) .NET Foundation. All rights reserved.
+﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using Moq;
 using NuGet.Services.Entities;
 using NuGet.Services.Licenses;
+using NuGetGallery.Security;
 using System.Collections.Generic;
 using Xunit;
 
@@ -27,7 +29,7 @@ namespace NuGetGallery.ViewModels
             };
 
             // act
-            var model = ViewModelHelper.CreateDisplayLicenseViewModel(package, licenseExpressionSegments: null, licenseFileContents: null);
+            var model = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayLicenseViewModel(package, licenseExpressionSegments: null, licenseFileContents: null);
 
             // assert
             Assert.Equal(embeddedLicenseType, model.EmbeddedLicenseType);
@@ -48,7 +50,7 @@ namespace NuGetGallery.ViewModels
             };
 
             // act
-            var model = ViewModelHelper.CreateDisplayLicenseViewModel(package, licenseExpressionSegments: null, licenseFileContents: null);
+            var model = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayLicenseViewModel(package, licenseExpressionSegments: null, licenseFileContents: null);
 
             // assert
             Assert.Equal(new string[] { "l1", "l2", "l3", "l4", "l5" }, model.LicenseNames);
@@ -76,7 +78,7 @@ namespace NuGetGallery.ViewModels
             };
 
             // act
-            var model = ViewModelHelper.CreateDisplayLicenseViewModel(package, licenseExpressionSegments: null, licenseFileContents: null);
+            var model = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayLicenseViewModel(package, licenseExpressionSegments: null, licenseFileContents: null);
 
             // assert
             Assert.Equal(expected, model.LicenseUrl);
@@ -94,7 +96,7 @@ namespace NuGetGallery.ViewModels
             var segments = new List<CompositeLicenseExpressionSegment>();
 
             // act
-            var model = ViewModelHelper.CreateDisplayLicenseViewModel(package, licenseExpressionSegments: segments, licenseFileContents: null);
+            var model = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayLicenseViewModel(package, licenseExpressionSegments: segments, licenseFileContents: null);
 
             // assert
             Assert.Equal(segments, model.LicenseExpressionSegments);
@@ -112,7 +114,7 @@ namespace NuGetGallery.ViewModels
             var licenseFileContents = "It's a license";
 
             // act
-            var model = ViewModelHelper.CreateDisplayLicenseViewModel(package, licenseExpressionSegments: null, licenseFileContents: licenseFileContents);
+            var model = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayLicenseViewModel(package, licenseExpressionSegments: null, licenseFileContents: licenseFileContents);
 
             // assert
             Assert.Equal(licenseFileContents, model.LicenseFileContents);

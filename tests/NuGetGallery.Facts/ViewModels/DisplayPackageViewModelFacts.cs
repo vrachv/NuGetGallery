@@ -4,9 +4,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Moq;
 using NuGet.Services.Entities;
 using NuGet.Versioning;
 using NuGetGallery.Framework;
+using NuGetGallery.Security;
 using Xunit;
 using static NuGetGallery.DisplayPackageViewModel;
 
@@ -57,7 +59,7 @@ namespace NuGetGallery.ViewModels
                 }
             };
 
-            var model = ViewModelHelper.CreateDisplayPackageViewModel(package, null, null);
+            var model = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, null);
             Assert.Equal(expectedKind, model.RepositoryType);
             Assert.Equal(expectedUrl, model.RepositoryUrl);
         }
@@ -99,7 +101,7 @@ namespace NuGetGallery.ViewModels
                 }
             };
 
-            var model = ViewModelHelper.CreateDisplayPackageViewModel(package, null, null);
+            var model = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, null);
             Assert.Equal(expected, model.ProjectUrl);
         }
 
@@ -127,7 +129,7 @@ namespace NuGetGallery.ViewModels
                 }
             };
 
-            var model = ViewModelHelper.CreateDisplayPackageViewModel(package, null, null);
+            var model = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, null);
             Assert.Equal(expected, model.LicenseUrl);
         }
 
@@ -146,7 +148,7 @@ namespace NuGetGallery.ViewModels
                 }
             };
 
-            var packageViewModel = ViewModelHelper.CreateDisplayPackageViewModel(package, currentUser: null, deprecation: null);
+            var packageViewModel = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, currentUser: null, deprecation: null);
             Assert.Equal(new string[] { "l1", "l2", "l3", "l4", "l5" }, packageViewModel.LicenseNames);
         }
 
@@ -175,7 +177,7 @@ namespace NuGetGallery.ViewModels
                     new Package { Version = "1.0.10", PackageRegistration = package.PackageRegistration }
                 };
 
-            var packageVersions = ViewModelHelper.CreateDisplayPackageViewModel(package, null, null)
+            var packageVersions = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, null)
                 .PackageVersions.ToList();
 
             // Descending
@@ -227,7 +229,7 @@ namespace NuGetGallery.ViewModels
                 });
             }
 
-            var viewModel = ViewModelHelper.CreateDisplayPackageViewModel(package, null, null);
+            var viewModel = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, null);
 
             // Descending
             Assert.NotNull(viewModel.LatestSymbolsPackage);
@@ -265,7 +267,7 @@ namespace NuGetGallery.ViewModels
 
             package.SymbolPackages = symbolPackageList;
 
-            var viewModel = ViewModelHelper.CreateDisplayPackageViewModel(package, null, null);
+            var viewModel = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, null);
 
             Assert.Equal(symbolPackageList[0], viewModel.LatestSymbolsPackage);
         }
@@ -303,7 +305,7 @@ namespace NuGetGallery.ViewModels
                 };
 
             // Act
-            var viewModel = ViewModelHelper.CreateDisplayPackageViewModel(package, null, null);
+            var viewModel = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, null);
 
             // Assert
             Assert.Equal(daysSinceFirstPackageCreated, viewModel.TotalDaysSinceCreated);
@@ -332,7 +334,7 @@ namespace NuGetGallery.ViewModels
 
             package.PackageRegistration.Packages = new[] { package };
 
-            var viewModel = ViewModelHelper.CreateDisplayPackageViewModel(package, null, null);
+            var viewModel = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, null);
 
             // Act
             var label = viewModel.DownloadsPerDayLabel;
@@ -364,7 +366,7 @@ namespace NuGetGallery.ViewModels
 
             package.PackageRegistration.Packages = new[] { package };
 
-            var viewModel = ViewModelHelper.CreateDisplayPackageViewModel(package, null, null);
+            var viewModel = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, null);
 
             // Act
             var label = viewModel.DownloadsPerDayLabel;
@@ -412,7 +414,7 @@ namespace NuGetGallery.ViewModels
 
             package.PackageRegistration.Packages = new[] { package, otherPackage };
 
-            var viewModel = ViewModelHelper.CreateDisplayPackageViewModel(package, null, null);
+            var viewModel = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, null);
 
             // Act
             var hasNewerPrerelease = viewModel.HasNewerPrerelease;
@@ -459,7 +461,7 @@ namespace NuGetGallery.ViewModels
 
             package.PackageRegistration.Packages = new[] { package, otherPackage };
 
-            var viewModel = ViewModelHelper.CreateDisplayPackageViewModel(package, null, null);
+            var viewModel = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, null);
 
             // Act
             var hasNewerRelease = viewModel.HasNewerRelease;
@@ -498,7 +500,7 @@ namespace NuGetGallery.ViewModels
 
             package.PackageRegistration.Packages = new[] { package, otherPackage };
 
-            var viewModel = ViewModelHelper.CreateDisplayPackageViewModel(package, null, null);
+            var viewModel = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, null);
 
             // Act
             var hasNewerPrerelease = viewModel.HasNewerPrerelease;
@@ -538,7 +540,7 @@ namespace NuGetGallery.ViewModels
 
             package.PackageRegistration.Packages = new[] { package, otherPackage };
 
-            var viewModel = ViewModelHelper.CreateDisplayPackageViewModel(package, null, null);
+            var viewModel = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, null);
 
             // Act
             var hasNewerRelease = viewModel.HasNewerRelease;
@@ -556,7 +558,7 @@ namespace NuGetGallery.ViewModels
             var package = CreateTestPackage("1.0.0", dependencyVersion: versionSpec);
 
             // Act
-            var viewModel = ViewModelHelper.CreateDisplayPackageViewModel(package, null, null);
+            var viewModel = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, null);
 
             // Assert
             Assert.False(viewModel.HasSemVer2Dependency);
@@ -572,7 +574,7 @@ namespace NuGetGallery.ViewModels
             var package = CreateTestPackage("1.0.0", dependencyVersion: versionSpec);
 
             // Act
-            var viewModel = ViewModelHelper.CreateDisplayPackageViewModel(package, null, null);
+            var viewModel = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, null);
 
             // Assert
             Assert.True(viewModel.HasSemVer2Dependency);
@@ -588,7 +590,7 @@ namespace NuGetGallery.ViewModels
             var package = CreateTestPackage("1.0.0", dependencyVersion: versionSpec);
 
             // Act
-            var viewModel = ViewModelHelper.CreateDisplayPackageViewModel(package, null, null);
+            var viewModel = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, null);
 
             // Assert
             Assert.False(viewModel.HasSemVer2Dependency);
@@ -604,7 +606,7 @@ namespace NuGetGallery.ViewModels
             var package = CreateTestPackage(version);
 
             // Act
-            var viewModel = ViewModelHelper.CreateDisplayPackageViewModel(package, null, null);
+            var viewModel = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, null);
 
             // Assert
             Assert.False(viewModel.HasSemVer2Version);
@@ -620,7 +622,7 @@ namespace NuGetGallery.ViewModels
             var package = CreateTestPackage(version);
 
             // Act
-            var viewModel = ViewModelHelper.CreateDisplayPackageViewModel(package, null, null);
+            var viewModel = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, null);
 
             // Assert
             Assert.True(viewModel.HasSemVer2Version);
@@ -730,7 +732,7 @@ namespace NuGetGallery.ViewModels
             [MemberData(nameof(Data))]
             public void ReturnsExpectedUser(Package package, User currentUser, string expected)
             {
-                var model = ViewModelHelper.CreateDisplayPackageViewModel(package, currentUser, null);
+                var model = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, currentUser, null);
 
                 Assert.Equal(expected, model.PushedBy);
             }
@@ -794,7 +796,7 @@ namespace NuGetGallery.ViewModels
             package.Deprecations.Add(linkedDeprecation);
 
             // Act
-            var model = ViewModelHelper.CreateDisplayPackageViewModel(package, null, deprecation);
+            var model = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateDisplayPackageViewModel(package, null, deprecation);
 
             // Assert
             Assert.Equal(status, model.DeprecationStatus);

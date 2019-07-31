@@ -1,6 +1,7 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using System.Web.Mvc;
 using NuGet.Services.Entities;
@@ -9,9 +10,16 @@ using NuGetGallery.Security;
 
 namespace NuGetGallery
 {
-    public partial class ViewModelHelper
+    public partial class ViewModelHelper : IViewModelHelper
     {
-        public static DeletePackageViewModel CreateDeletePackageViewModel(
+        private readonly ISecurityPolicyService _securityPolicyService;
+
+        public ViewModelHelper(ISecurityPolicyService securityPolicyService)
+        {
+            _securityPolicyService = securityPolicyService ?? throw new ArgumentNullException(nameof(securityPolicyService));
+        }
+
+        public DeletePackageViewModel CreateDeletePackageViewModel(
             Package package,
             User currentUser,
             IReadOnlyList<ReportPackageReason> reasons)
@@ -20,7 +28,7 @@ namespace NuGetGallery
             return SetupDeletePackageViewModel(viewModel, package, currentUser, reasons);
         }
 
-        public static DisplayLicenseViewModel CreateDisplayLicenseViewModel(
+        public DisplayLicenseViewModel CreateDisplayLicenseViewModel(
             Package package,
             IReadOnlyCollection<CompositeLicenseExpressionSegment> licenseExpressionSegments,
             string licenseFileContents)
@@ -29,7 +37,7 @@ namespace NuGetGallery
             return SetupDisplayLicenseViewModel(viewModel, package, licenseExpressionSegments, licenseFileContents);
         }
 
-        public static DisplayPackageViewModel CreateDisplayPackageViewModel(
+        public DisplayPackageViewModel CreateDisplayPackageViewModel(
             Package package,
             User currentUser,
             PackageDeprecation deprecation)
@@ -38,23 +46,22 @@ namespace NuGetGallery
             return SetupDisplayPackageViewModel(viewModel, package, currentUser, deprecation);
         }
 
-        public static ListPackageItemRequiredSignerViewModel CreateListPackageItemRequiredSignerViewModel(
+        public ListPackageItemRequiredSignerViewModel CreateListPackageItemRequiredSignerViewModel(
             Package package,
             User currentUser,
-            ISecurityPolicyService securityPolicyService,
             bool wasAADLoginOrMultiFactorAuthenticated)
         {
             var viewModel = new ListPackageItemRequiredSignerViewModel();
-            return SetupListPackageItemRequiredSignerViewModel(viewModel, package, currentUser, securityPolicyService, wasAADLoginOrMultiFactorAuthenticated);
+            return SetupListPackageItemRequiredSignerViewModel(viewModel, package, currentUser, _securityPolicyService, wasAADLoginOrMultiFactorAuthenticated);
         }
 
-        public static ListPackageItemViewModel CreateListPackageItemViewModel(Package package, User currentUser)
+        public ListPackageItemViewModel CreateListPackageItemViewModel(Package package, User currentUser)
         {
             var viewModel = new ListPackageItemViewModel();
             return SetupListPackageItemViewModel(viewModel, package, currentUser);
         }
 
-        public static ManagePackageViewModel CreateManagePackageViewModel(
+        public ManagePackageViewModel CreateManagePackageViewModel(
             Package package,
             User currentUser,
             IReadOnlyList<ReportPackageReason> reasons,
@@ -66,7 +73,7 @@ namespace NuGetGallery
             return SetupManagePackageViewModel(viewModel, package, currentUser, reasons, url, readMe, isManageDeprecationEnabled);
         }
 
-        public static PackageViewModel CreatePackageViewModel(Package package)
+        public PackageViewModel CreatePackageViewModel(Package package)
         {
             var viewModel = new PackageViewModel();
             return SetupPackageViewModel(viewModel, package);

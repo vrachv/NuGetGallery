@@ -399,6 +399,10 @@ namespace NuGetGallery
                 .As<ICloudBlobContainerInformationProvider>()
                 .InstancePerLifetimeScope();
 
+            builder.RegisterType<ViewModelHelper>()
+                .As<IViewModelHelper>()
+                .InstancePerLifetimeScope();
+
             RegisterFeatureFlagsService(builder, configuration);
             RegisterMessagingService(builder, configuration);
 
@@ -815,7 +819,8 @@ namespace NuGetGallery
                     c.ResolveKeyed<ISearchService>(BindingKeys.PreviewSearchClient),
                     c.Resolve<ITelemetryService>(),
                     c.Resolve<IMessageService>(),
-                    c.Resolve<IMessageServiceConfiguration>()))
+                    c.Resolve<IMessageServiceConfiguration>(),
+                    c.Resolve<IViewModelHelper>()))
                 .As<ISearchSideBySideService>()
                 .InstancePerLifetimeScope();
 

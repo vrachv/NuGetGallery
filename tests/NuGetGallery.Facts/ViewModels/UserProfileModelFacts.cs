@@ -2,8 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System.Collections.Generic;
+using Moq;
 using NuGet.Services.Entities;
 using NuGetGallery.Framework;
+using NuGetGallery.Security;
 using Xunit;
 
 namespace NuGetGallery.ViewModels
@@ -35,7 +37,7 @@ namespace NuGetGallery.ViewModels
 
             private ListPackageItemViewModel CreatePackageItemViewModel(string version)
             {
-                return ViewModelHelper.CreateListPackageItemViewModel(new Package
+                return new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateListPackageItemViewModel(new Package
                 {
                     PackageRegistration = new PackageRegistration
                     {

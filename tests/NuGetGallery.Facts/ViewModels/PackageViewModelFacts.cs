@@ -2,7 +2,9 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using Moq;
 using NuGet.Services.Entities;
+using NuGetGallery.Security;
 using Xunit;
 
 namespace NuGetGallery.ViewModels
@@ -18,7 +20,7 @@ namespace NuGetGallery.ViewModels
                 PackageRegistration = new PackageRegistration { Id = "SomeId" },
                 NormalizedVersion = "1.3.0" // Different just to prove the View Model is using the DB column.
             };
-            var packageViewModel = ViewModelHelper.CreatePackageViewModel(package);
+            var packageViewModel = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreatePackageViewModel(package);
             Assert.Equal("1.3.0", packageViewModel.Version);
         }
 
@@ -30,7 +32,7 @@ namespace NuGetGallery.ViewModels
                 Version = "01.02.00.00",
                 PackageRegistration = new PackageRegistration { Id = "SomeId" },
             };
-            var packageViewModel = ViewModelHelper.CreatePackageViewModel(package);
+            var packageViewModel = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreatePackageViewModel(package);
             Assert.Equal("1.2.0", packageViewModel.Version);
         }
 
@@ -55,7 +57,7 @@ namespace NuGetGallery.ViewModels
             };
 
             // Act 
-            var packageViewModel = ViewModelHelper.CreatePackageViewModel(package);
+            var packageViewModel = new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreatePackageViewModel(package);
 
             // Assert
             Assert.Equal(expected, packageViewModel.PackageStatusSummary);
@@ -76,7 +78,7 @@ namespace NuGetGallery.ViewModels
             var packageViewModel = new PackageViewModel();
 
             // Assert
-            Assert.Throws<ArgumentOutOfRangeException>(() => ViewModelHelper.CreatePackageViewModel(package));
+            Assert.Throws<ArgumentOutOfRangeException>(() => new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreatePackageViewModel(package));
         }
     }
 }

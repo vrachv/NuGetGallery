@@ -208,6 +208,7 @@
     <Compile Include="Controllers\ExperimentsController.cs" />
     <Compile Include="Controllers\ManageDeprecationJsonApiController.cs" />
     <Compile Include="ExtensionMethods.cs" />
+    <Compile Include="Helpers\IViewModelHelper.cs" />
     <Compile Include="Helpers\ViewModelHelper\ViewModelHelper_DeletePackageViewModel.cs" />
     <Compile Include="Helpers\ViewModelHelper\ViewModelHelper_DisplayLicenseViewModel.cs" />
     <Compile Include="Helpers\ViewModelHelper\ViewModelHelper_DisplayPackageViewModel.cs" />
