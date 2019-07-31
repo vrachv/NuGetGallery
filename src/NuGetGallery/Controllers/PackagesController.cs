@@ -1042,7 +1042,7 @@ namespace NuGetGallery
 
             var currentUser = GetCurrentUser();
             var items = results.Data
-                .Select(pv => new ListPackageItemViewModel().Setup(pv, currentUser))
+                .Select(pv => ViewModelHelper.CreateListPackageItemViewModel(pv, currentUser))
                 .ToList();
 
             var viewModel = new PackageListViewModel(
@@ -1501,7 +1501,7 @@ namespace NuGetGallery
             }
 
             var currentUser = GetCurrentUser();
-            var model = new ManagePackageViewModel().Setup(
+            var model = ViewModelHelper.CreateManagePackageViewModel(
                 package,
                 GetCurrentUser(),
                 ReportMyPackageReasons,

@@ -15,9 +15,9 @@ namespace NuGetGallery
             User currentUser,
             IReadOnlyList<ReportPackageReason> reasons)
         {
-            ((DisplayPackageViewModel)v).Setup(package, currentUser, deprecation: null);
+            ((DisplayPackageViewModel)viewModel).Setup(package, currentUser, deprecation: null);
 
-            v.DeletePackagesRequest = new DeletePackagesRequest
+            viewModel.DeletePackagesRequest = new DeletePackagesRequest
             {
                 Packages = new List<string>
                 {
@@ -30,9 +30,9 @@ namespace NuGetGallery
                 ReasonChoices = reasons
             };
 
-            v.IsLocked = package.PackageRegistration.IsLocked;
+            viewModel.IsLocked = package.PackageRegistration.IsLocked;
 
-            return v;
+            return viewModel;
         }
     }
 }
