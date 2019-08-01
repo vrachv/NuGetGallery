@@ -1181,6 +1181,16 @@ namespace NuGetGallery
                     .Setup(x => x.FindPackagesByOwner(owner, false, false))
                     .Returns(new[] { package1, package2 });
 
+                GetMock<IViewModelHelper>()
+                    .Setup(vmh => vmh.CreateListPackageItemViewModel(It.IsAny<Package>(), It.IsAny<User>()))
+                    .Returns<Package, User>((p, _) => new ListPackageItemViewModel
+                    {
+                        Id = p.Id,
+                        Version = p.Version,
+                        DownloadCount = p.DownloadCount,
+                        TotalDownloadCount = p.PackageRegistration.DownloadCount
+                    });
+
                 var controller = GetController<UsersController>();
                 controller.SetCurrentUser(currentUser);
 
@@ -1200,39 +1210,12 @@ namespace NuGetGallery
                 Assert.Equal(orderedPackages.Count(), model.TotalPackages);
                 Assert.Equal(orderedPackages.Sum(p => p.PackageRegistration.DownloadCount), model.TotalPackageDownloadCount);
 
-                var orderedPackagesIndex = 0;
-                foreach (var package in model.AllPackages)
+                foreach (var package in orderedPackages)
                 {
-                    AssertListPackageItemViewModel(package, currentUser, orderedPackages[orderedPackagesIndex++]);
+                    GetMock<IViewModelHelper>()
+                        .Verify(vmh => vmh.CreateListPackageItemViewModel(package, currentUser), Times.Once);
+                    Assert.Equal(package.PackageStatusKey, PackageStatus.Available);
                 }
-            }
-
-            private void AssertListPackageItemViewModel(
-                ListPackageItemViewModel packageModel,
-                User currentUser,
-                Package package)
-            {
-                Assert.Equal(package.PackageStatusKey, PackageStatus.Available);
-                Assert.Equal(package.PackageRegistration.Id, packageModel.Id);
-                Assert.Equal(package.Version, packageModel.Version);
-                Assert.Equal(package.PackageRegistration.DownloadCount, packageModel.DownloadCount);
-
-                AssertListPackageItemViewModelPermissions(packageModel, p => p.CanDisplayPrivateMetadata, currentUser, package, ActionsRequiringPermissions.DisplayPrivatePackageMetadata);
-                AssertListPackageItemViewModelPermissions(packageModel, p => p.CanEdit, currentUser, package, ActionsRequiringPermissions.EditPackage);
-                AssertListPackageItemViewModelPermissions(packageModel, p => p.CanUnlistOrRelist, currentUser, package, ActionsRequiringPermissions.UnlistOrRelistPackage);
-                AssertListPackageItemViewModelPermissions(packageModel, p => p.CanManageOwners, currentUser, package, ActionsRequiringPermissions.ManagePackageOwnership);
-                AssertListPackageItemViewModelPermissions(packageModel, p => p.CanReportAsOwner, currentUser, package, ActionsRequiringPermissions.ReportPackageAsOwner);
-            }
-
-            private void AssertListPackageItemViewModelPermissions(
-                ListPackageItemViewModel packageModel,
-                Func<ListPackageItemViewModel, bool> getPermissionsField,
-                User currentUser,
-                Package package,
-                IActionRequiringEntityPermissions<Package> action)
-            {
-                var expectedPermissions = action.CheckPermissionsOnBehalfOfAnyAccount(currentUser, package) == PermissionsCheckResult.Allowed;
-                Assert.Equal(expectedPermissions, getPermissionsField(packageModel));
             }
         }
 

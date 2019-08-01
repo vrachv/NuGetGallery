@@ -1,8 +1,10 @@
 ﻿// Copyright (c) .NET Foundation. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.ApplicationInsights.Web;
 using NuGet.Services.Entities;
 using Xunit;
 
@@ -12,6 +14,45 @@ namespace NuGetGallery.Helpers
     {
         public class TheCreateListPackageItemViewModelMethod : ViewModelHelperFactsBase
         {
+            [Theory]
+            [InlineData(false)]
+            [InlineData(true)]
+            public void SetsUpPropertiesProperly(bool isOwner)
+            {
+                var currentUser = new User();
+                var otherUser = new User();
+
+                var package = new Package
+                {
+                    PackageRegistration = new PackageRegistration { Id = "TestPackage", DownloadCount = 42, Owners = new[] { isOwner ? currentUser : otherUser }  },
+                    Version = "01.02.03",
+                    NormalizedVersion = "5.6.7",
+                    DownloadCount = 12,
+                };
+
+                var viewModel = _target.CreateListPackageItemViewModel(package, currentUser);
+                Assert.Equal(package.PackageRegistration.Id, viewModel.Id);
+                Assert.Equal(package.Version, viewModel.Version);
+                Assert.Equal(package.PackageRegistration.DownloadCount, viewModel.DownloadCount);
+
+                AssertListPackageItemViewModelPermissions(viewModel, p => p.CanDisplayPrivateMetadata, currentUser, package, ActionsRequiringPermissions.DisplayPrivatePackageMetadata);
+                AssertListPackageItemViewModelPermissions(viewModel, p => p.CanEdit, currentUser, package, ActionsRequiringPermissions.EditPackage);
+                AssertListPackageItemViewModelPermissions(viewModel, p => p.CanUnlistOrRelist, currentUser, package, ActionsRequiringPermissions.UnlistOrRelistPackage);
+                AssertListPackageItemViewModelPermissions(viewModel, p => p.CanManageOwners, currentUser, package, ActionsRequiringPermissions.ManagePackageOwnership);
+                AssertListPackageItemViewModelPermissions(viewModel, p => p.CanReportAsOwner, currentUser, package, ActionsRequiringPermissions.ReportPackageAsOwner);
+            }
+
+            private static void AssertListPackageItemViewModelPermissions(
+                ListPackageItemViewModel packageModel,
+                Func<ListPackageItemViewModel, bool> getPermissionsField,
+                User currentUser,
+                Package package,
+                IActionRequiringEntityPermissions<Package> action)
+            {
+                var expectedPermissions = action.CheckPermissionsOnBehalfOfAnyAccount(currentUser, package) == PermissionsCheckResult.Allowed;
+                Assert.Equal(expectedPermissions, getPermissionsField(packageModel));
+            }
+
             // start with replicating the PackageViewModelFacts here since we shouldn't be breaking these
             // ListPackageItemViewModel extends PackageViewModel
             #region CopiedFromPackageViewModelFacts
