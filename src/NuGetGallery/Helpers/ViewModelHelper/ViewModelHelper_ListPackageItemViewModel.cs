@@ -8,7 +8,7 @@ namespace NuGetGallery
 {
     public partial class ViewModelHelper
     {
-        internal static ListPackageItemViewModel SetupListPackageItemViewModel(ListPackageItemViewModel viewModel, Package package, User currentUser)
+        private ListPackageItemViewModel SetupListPackageItemViewModel(ListPackageItemViewModel viewModel, Package package, User currentUser)
         {
             SetupPackageViewModel(viewModel, package);
 

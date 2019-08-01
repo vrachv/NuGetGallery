@@ -753,36 +753,7 @@ namespace NuGetGallery
             }
 
             var deprecation = _deprecationService.GetDeprecationByPackage(package);
-            var model = _viewModelHelper.CreateDisplayPackageViewModel(package, currentUser, deprecation);
-
-            model.ValidatingTooLong = _validationService.IsValidatingTooLong(package);
-            model.PackageValidationIssues = _validationService.GetLatestPackageValidationIssues(package);
-            model.SymbolsPackageValidationIssues = _validationService.GetLatestPackageValidationIssues(model.LatestSymbolsPackage);
-            model.IsCertificatesUIEnabled = _contentObjectService.CertificatesConfiguration?.IsUIEnabledForUser(currentUser) ?? false;
-            model.IsAtomFeedEnabled = _featureFlagService.IsPackagesAtomFeedEnabled();
-            model.IsPackageDeprecationEnabled = _featureFlagService.IsManageDeprecationEnabled(currentUser, package.PackageRegistration);
-
-            if(model.IsGitHubUsageEnabled = _featureFlagService.IsGitHubUsageEnabled(currentUser))
-            {
-                model.GitHubDependenciesInformation = _contentObjectService.GitHubUsageConfiguration.GetPackageInformation(id);
-            }
-
-            model.ReadMeHtml = await _readMeService.GetReadMeHtmlAsync(package);
-
-            if (!string.IsNullOrWhiteSpace(package.LicenseExpression))
-            {
-                try
-                {
-                    model.LicenseExpressionSegments = _licenseExpressionSplitter.SplitExpression(package.LicenseExpression);
-                }
-                catch (Exception ex)
-                {
-                    // Any exception thrown while trying to render license expression beautifully
-                    // is not severe enough to break the client experience, view will fall back to
-                    // display license url.
-                    _telemetryService.TraceException(ex);
-                }
-            }
+            var model = _viewModelHelper.CreateDisplayPackageViewModel(package, currentUser, deprecation, await _readMeService.GetReadMeHtmlAsync(package));
 
             var externalSearchService = _searchService as ExternalSearchService;
             if (_searchService.ContainsAllVersions && externalSearchService != null)
@@ -1506,7 +1477,7 @@ namespace NuGetGallery
             var currentUser = GetCurrentUser();
             var model = _viewModelHelper.CreateManagePackageViewModel(
                 package,
-                GetCurrentUser(),
+                currentUser,
                 ReportMyPackageReasons,
                 Url,
                 await _readMeService.GetReadMeMdAsync(package),

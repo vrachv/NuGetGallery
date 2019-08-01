@@ -17,11 +17,10 @@ namespace NuGetGallery
         private static readonly SignerViewModel AnySigner =
             new SignerViewModel(username: "", displayText: "Any");
 
-        internal static ListPackageItemRequiredSignerViewModel SetupListPackageItemRequiredSignerViewModel(
+        private ListPackageItemRequiredSignerViewModel SetupListPackageItemRequiredSignerViewModel(
             ListPackageItemRequiredSignerViewModel viewModel,
             Package package,
             User currentUser,
-            ISecurityPolicyService securityPolicyService,
             bool wasAADLoginOrMultiFactorAuthenticated)
         {
             SetupListPackageItemViewModel(viewModel, package, currentUser);
@@ -31,18 +30,13 @@ namespace NuGetGallery
                 throw new ArgumentNullException(nameof(currentUser));
             }
 
-            if (securityPolicyService == null)
-            {
-                throw new ArgumentNullException(nameof(securityPolicyService));
-            }
-
             var owners = package.PackageRegistration?.Owners ?? Enumerable.Empty<User>();
 
             if (owners.Any())
             {
                 viewModel.ShowRequiredSigner = true;
 
-                viewModel.CanEditRequiredSigner = CanEditRequiredSigner(package, currentUser, securityPolicyService, owners);
+                viewModel.CanEditRequiredSigner = CanEditRequiredSigner(package, currentUser, _securityPolicyService, owners);
 
                 var requiredSigner = package.PackageRegistration?.RequiredSigners.FirstOrDefault();
 
@@ -90,7 +84,7 @@ namespace NuGetGallery
                     viewModel.AllSigners = new[] { viewModel.RequiredSigner };
 
                     var ownersWithRequiredSignerControl = owners.Where(
-                        owner => securityPolicyService.IsSubscribed(owner, ControlRequiredSignerPolicy.PolicyName));
+                        owner => _securityPolicyService.IsSubscribed(owner, ControlRequiredSignerPolicy.PolicyName));
 
                     if (owners.Count() == 1)
                     {

@@ -30,7 +30,8 @@ namespace NuGetGallery
             IPackageService packageService,
             IDeleteAccountService deleteAccountService,
             IContentObjectService contentObjectService,
-            IMessageServiceConfiguration messageServiceConfiguration)
+            IMessageServiceConfiguration messageServiceConfiguration,
+            IViewModelHelper viewModelHelper)
             : base(
                   authService,
                   packageService,
@@ -41,7 +42,8 @@ namespace NuGetGallery
                   certificateService,
                   contentObjectService,
                   messageServiceConfiguration,
-                  deleteAccountService)
+                  deleteAccountService,
+                  viewModelHelper)
         {
         }
 

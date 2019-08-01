@@ -1117,6 +1117,16 @@ namespace NuGetGallery
                     .Setup(x => x.FindPackagesByOwner(owner, false, false))
                     .Returns(new[] { package, invalidatedPackage, validatingPackage, deletedPackage });
 
+                GetMock<IViewModelHelper>()
+                    .Setup(vmh => vmh.CreateListPackageItemViewModel(It.IsAny<Package>(), It.IsAny<User>()))
+                    .Returns<Package, User>((p, _) => new ListPackageItemViewModel
+                    {
+                        Id = p.Id,
+                        Version = p.Version,
+                        DownloadCount = p.DownloadCount,
+                        TotalDownloadCount = p.PackageRegistration.DownloadCount
+                    });
+
                 var controller = GetController<UsersController>();
                 controller.SetCurrentUser(currentUser);
 
@@ -2256,6 +2266,9 @@ namespace NuGetGallery
                 GetMock<ISupportRequestService>()
                    .Setup(stub => stub.GetIssues(null, null, null, null))
                    .Returns(issues);
+                GetMock<IViewModelHelper>()
+                    .Setup(vmh => vmh.CreateDeleteAccountListPackageItemViewModel(userPackage, testUser, testUser))
+                    .Returns(new DeleteAccountListPackageItemViewModel { WillBeOrphaned = isPackageOrphaned });
 
                 // act
                 var result = controller.DeleteRequest() as ViewResult;
@@ -3391,6 +3404,9 @@ namespace NuGetGallery
                 GetMock<ISupportRequestService>()
                     .Setup(stub => stub.GetIssues(null, null, null, null))
                     .Returns(issues);
+                GetMock<IViewModelHelper>()
+                    .Setup(vmh => vmh.CreateDeleteAccountListPackageItemViewModel(userPackage, testUser, fakes.Admin))
+                    .Returns(new DeleteAccountListPackageItemViewModel { });
 
                 // act
                 var model = ResultAssert.IsView<DeleteUserViewModel>(controller.Delete(accountName: userName), viewName: "DeleteUserAccount");

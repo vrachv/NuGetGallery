@@ -30,7 +30,6 @@ namespace NuGetGallery
         private readonly IAppConfiguration _config;
         private readonly ICredentialBuilder _credentialBuilder;
         private readonly ISupportRequestService _supportRequestService;
-        private readonly IViewModelHelper _viewModelHelper;
 
         public UsersController(
             IUserService userService,
@@ -58,13 +57,13 @@ namespace NuGetGallery
                   certificateService,
                   contentObjectService,
                   messageServiceConfiguration,
-                  deleteAccountService)
+                  deleteAccountService,
+                  viewModelHelper)
         {
             _packageOwnerRequestService = packageOwnerRequestService ?? throw new ArgumentNullException(nameof(packageOwnerRequestService));
             _config = config ?? throw new ArgumentNullException(nameof(config));
             _credentialBuilder = credentialBuilder ?? throw new ArgumentNullException(nameof(credentialBuilder));
             _supportRequestService = supportRequestService ?? throw new ArgumentNullException(nameof(supportRequestService));
-            _viewModelHelper = viewModelHelper ?? throw new ArgumentNullException(nameof(viewModelHelper));
         }
 
         public override string AccountAction => nameof(Account);
@@ -438,12 +437,12 @@ namespace NuGetGallery
             var packages = PackageService.FindPackagesByAnyMatchingOwner(currentUser, includeUnlisted: true);
             var listedPackages = packages
                 .Where(p => p.Listed && p.PackageStatusKey == PackageStatus.Available)
-                .Select(p => _viewModelHelper.CreateListPackageItemRequiredSignerViewModel(p, currentUser, wasAADLoginOrMultiFactorAuthenticated))
+                .Select(p => ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(p, currentUser, wasAADLoginOrMultiFactorAuthenticated))
                 .OrderBy(p => p.Id)
                 .ToList();
             var unlistedPackages = packages
                 .Where(p => !p.Listed || p.PackageStatusKey != PackageStatus.Available)
-                .Select(p => _viewModelHelper.CreateListPackageItemRequiredSignerViewModel(p, currentUser, wasAADLoginOrMultiFactorAuthenticated))
+                .Select(p => ViewModelHelper.CreateListPackageItemRequiredSignerViewModel(p, currentUser, wasAADLoginOrMultiFactorAuthenticated))
                 .OrderBy(p => p.Id)
                 .ToList();
 
@@ -618,7 +617,7 @@ namespace NuGetGallery
                 .OrderByDescending(p => p.PackageRegistration.DownloadCount)
                 .Select(p => 
                 {
-                    var viewModel = _viewModelHelper.CreateListPackageItemViewModel(p, currentUser);
+                    var viewModel = ViewModelHelper.CreateListPackageItemViewModel(p, currentUser);
                     viewModel.DownloadCount = p.PackageRegistration.DownloadCount;
                     return viewModel;
                 }).ToList();
@@ -1113,7 +1112,7 @@ namespace NuGetGallery
         private OwnerRequestsListItemViewModel CreateOwnerRequestsListItemViewModel(PackageOwnerRequest request, User currentUser)
         {
             var package = PackageService.FindPackageByIdAndVersion(request.PackageRegistration.Id, version: null, semVerLevelKey: SemVerLevelKey.SemVer2, allowPrerelease: true);
-            var packageViewModel = _viewModelHelper.CreateListPackageItemViewModel(package, currentUser);
+            var packageViewModel = ViewModelHelper.CreateListPackageItemViewModel(package, currentUser);
 
             return new OwnerRequestsListItemViewModel
             {

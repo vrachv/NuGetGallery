@@ -11,11 +11,12 @@ namespace NuGetGallery
 {
     public partial class ViewModelHelper
     {
-        internal static DisplayPackageViewModel SetupDisplayPackageViewModel(
+        private DisplayPackageViewModel SetupDisplayPackageViewModel(
             DisplayPackageViewModel viewModel,
             Package package,
             User currentUser,
-            PackageDeprecation deprecation)
+            PackageDeprecation deprecation,
+            string readMeHtml)
         {
             SetupDisplayViewModelCommon(viewModel, package, currentUser, pushedBy: null);
 
@@ -77,10 +78,40 @@ namespace NuGetGallery
                 viewModel.CustomMessage = deprecation.CustomMessage;
             }
 
+            viewModel.ValidatingTooLong = _validationService.IsValidatingTooLong(package);
+            viewModel.PackageValidationIssues = _validationService.GetLatestPackageValidationIssues(package);
+            viewModel.SymbolsPackageValidationIssues = _validationService.GetLatestPackageValidationIssues(viewModel.LatestSymbolsPackage);
+
+            viewModel.IsCertificatesUIEnabled = _contentObjectService.CertificatesConfiguration?.IsUIEnabledForUser(currentUser) ?? false;
+            viewModel.IsAtomFeedEnabled = _featureFlagService.IsPackagesAtomFeedEnabled();
+            viewModel.IsPackageDeprecationEnabled = _featureFlagService.IsManageDeprecationEnabled(currentUser, package.PackageRegistration);
+
+            if (viewModel.IsGitHubUsageEnabled = _featureFlagService.IsGitHubUsageEnabled(currentUser))
+            {
+                viewModel.GitHubDependenciesInformation = _contentObjectService.GitHubUsageConfiguration.GetPackageInformation(viewModel.Id);
+            }
+
+            viewModel.ReadMeHtml = readMeHtml;
+
+            if (!string.IsNullOrWhiteSpace(package.LicenseExpression))
+            {
+                try
+                {
+                    viewModel.LicenseExpressionSegments = _licenseExpressionSplitter.SplitExpression(package.LicenseExpression);
+                }
+                catch (Exception ex)
+                {
+                    // Any exception thrown while trying to render license expression beautifully
+                    // is not severe enough to break the client experience, view will fall back to
+                    // display license url.
+                    _telemetryService.TraceException(ex);
+                }
+            }
+
             return viewModel;
         }
 
-        private static DisplayPackageViewModel SetupDisplayViewModelCommon(
+        private DisplayPackageViewModel SetupDisplayViewModelCommon(
             DisplayPackageViewModel viewModel,
             Package package,
             User currentUser,

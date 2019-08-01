@@ -48,6 +48,10 @@ namespace NuGetGallery
             {
                 var searchTerm = " json  ";
 
+                ViewModelHelper
+                    .Setup(vmh => vmh.CreateListPackageItemViewModel(It.IsAny<Package>(), CurrentUser))
+                    .Returns<Package, User>((p, _) => new ListPackageItemViewModel { Id = p.Id, Version = p.Version });
+
                 var result = await Target.SearchAsync(searchTerm, CurrentUser);
 
                 Assert.Equal("json", result.SearchTerm);

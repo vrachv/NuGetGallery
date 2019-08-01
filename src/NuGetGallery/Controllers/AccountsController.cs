@@ -32,27 +32,29 @@ namespace NuGetGallery
             public string EmailUpdateCancelled { get; set; }
         }
 
-        public AuthenticationService AuthenticationService { get; }
+        protected AuthenticationService AuthenticationService { get; }
 
-        public IPackageService PackageService { get; }
+        protected IPackageService PackageService { get; }
 
-        public IMessageService MessageService { get; }
+        protected IMessageService MessageService { get; }
 
-        public IUserService UserService { get; }
+        protected IUserService UserService { get; }
 
-        public ITelemetryService TelemetryService { get; }
+        protected ITelemetryService TelemetryService { get; }
 
-        public ISecurityPolicyService SecurityPolicyService { get; }
+        protected ISecurityPolicyService SecurityPolicyService { get; }
 
-        public ICertificateService CertificateService { get; }
+        protected ICertificateService CertificateService { get; }
 
-        public IContentObjectService ContentObjectService { get; }
+        protected IContentObjectService ContentObjectService { get; }
 
-        public IMessageServiceConfiguration MessageServiceConfiguration { get; }
+        protected IMessageServiceConfiguration MessageServiceConfiguration { get; }
 
-        public IDeleteAccountService DeleteAccountService { get; }
+        protected IDeleteAccountService DeleteAccountService { get; }
 
-        public AccountsController(
+        protected IViewModelHelper ViewModelHelper { get; }
+
+        protected AccountsController(
             AuthenticationService authenticationService,
             IPackageService packageService,
             IMessageService messageService,
@@ -62,7 +64,8 @@ namespace NuGetGallery
             ICertificateService certificateService,
             IContentObjectService contentObjectService,
             IMessageServiceConfiguration messageServiceConfiguration,
-            IDeleteAccountService deleteAccountService)
+            IDeleteAccountService deleteAccountService,
+            IViewModelHelper viewModelHelper)
         {
             AuthenticationService = authenticationService ?? throw new ArgumentNullException(nameof(authenticationService));
             PackageService = packageService ?? throw new ArgumentNullException(nameof(packageService));
@@ -74,6 +77,7 @@ namespace NuGetGallery
             ContentObjectService = contentObjectService ?? throw new ArgumentNullException(nameof(contentObjectService));
             MessageServiceConfiguration = messageServiceConfiguration ?? throw new ArgumentNullException(nameof(messageServiceConfiguration));
             DeleteAccountService = deleteAccountService ?? throw new ArgumentNullException(nameof(deleteAccountService));
+            ViewModelHelper = viewModelHelper ?? throw new ArgumentNullException(nameof(viewModelHelper));
         }
 
         public abstract string AccountAction { get; }
@@ -382,10 +386,7 @@ namespace NuGetGallery
             User userToDelete,
             User currentUser)
         {
-            var viewModel = new DeleteAccountListPackageItemViewModel();
-            ViewModelHelper.SetupListPackageItemViewModel(viewModel, package, currentUser);
-            viewModel.WillBeOrphaned = PackageService.WillPackageBeOrphanedIfOwnerRemoved(package.PackageRegistration, userToDelete);
-            return viewModel;
+            return ViewModelHelper.CreateDeleteAccountListPackageItemViewModel(package, userToDelete, currentUser);
         }
 
 

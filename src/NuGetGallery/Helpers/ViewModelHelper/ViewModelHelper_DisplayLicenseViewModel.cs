@@ -10,7 +10,7 @@ namespace NuGetGallery
 {
     public partial class ViewModelHelper
     {
-        internal static DisplayLicenseViewModel SetupDisplayLicenseViewModel(
+        private DisplayLicenseViewModel SetupDisplayLicenseViewModel(
             DisplayLicenseViewModel viewModel,
             Package package,
             IReadOnlyCollection<CompositeLicenseExpressionSegment> licenseExpressionSegments,

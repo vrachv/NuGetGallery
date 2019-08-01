@@ -12,10 +12,11 @@ namespace NuGetGallery
     {
         DeletePackageViewModel CreateDeletePackageViewModel(Package package, User currentUser, IReadOnlyList<ReportPackageReason> reasons);
         DisplayLicenseViewModel CreateDisplayLicenseViewModel(Package package, IReadOnlyCollection<CompositeLicenseExpressionSegment> licenseExpressionSegments, string licenseFileContents);
-        DisplayPackageViewModel CreateDisplayPackageViewModel(Package package, User currentUser, PackageDeprecation deprecation);
+        DisplayPackageViewModel CreateDisplayPackageViewModel(Package package, User currentUser, PackageDeprecation deprecation, string readmeHtml);
         ListPackageItemRequiredSignerViewModel CreateListPackageItemRequiredSignerViewModel(Package package, User currentUser, bool wasAADLoginOrMultiFactorAuthenticated);
         ListPackageItemViewModel CreateListPackageItemViewModel(Package package, User currentUser);
         ManagePackageViewModel CreateManagePackageViewModel(Package package, User currentUser, IReadOnlyList<ReportPackageReason> reasons, UrlHelper url, string readMe, bool isManageDeprecationEnabled);
         PackageViewModel CreatePackageViewModel(Package package);
+        DeleteAccountListPackageItemViewModel CreateDeleteAccountListPackageItemViewModel(Package package, User userToDelete, User currentUser);
     }
 }

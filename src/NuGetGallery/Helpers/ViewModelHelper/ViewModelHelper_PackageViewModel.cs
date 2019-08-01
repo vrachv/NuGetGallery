@@ -8,7 +8,7 @@ namespace NuGetGallery
 {
     public partial class ViewModelHelper
     {
-        internal static PackageViewModel SetupPackageViewModel(PackageViewModel viewModel, Package package)
+        private PackageViewModel SetupPackageViewModel(PackageViewModel viewModel, Package package)
         {
             if (viewModel == null)
             {

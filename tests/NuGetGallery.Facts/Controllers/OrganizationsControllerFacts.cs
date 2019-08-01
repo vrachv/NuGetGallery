@@ -1406,6 +1406,10 @@ namespace NuGetGallery
                 GetMock<IPackageService>()
                     .Setup(stub => stub.WillPackageBeOrphanedIfOwnerRemoved(packageRegistration, testOrganization))
                     .Returns(isPackageOrphaned);
+                var expectedPackagesViewModel = new DeleteAccountListPackageItemViewModel() { WillBeOrphaned = isPackageOrphaned };
+                GetMock<IViewModelHelper>()
+                    .Setup(vmh => vmh.CreateDeleteAccountListPackageItemViewModel(userPackage, testOrganization, fakes.OrganizationAdmin))
+                    .Returns(expectedPackagesViewModel);
 
                 // act
                 var result = await Invoke(controller, testOrganization.Username);
@@ -1413,7 +1417,7 @@ namespace NuGetGallery
                 // Assert
                 var model = ResultAssert.IsView<DeleteOrganizationViewModel>(result, "DeleteAccount");
                 Assert.Equal(testOrganization.Username, model.AccountName);
-                Assert.Single(model.Packages);
+                Assert.Same(expectedPackagesViewModel, Assert.Single(model.Packages));
                 Assert.Equal(isPackageOrphaned, model.HasPackagesThatWillBeOrphaned);
                 Assert.Equal(withAdditionalMembers, model.HasAdditionalMembers);
             }
@@ -1441,6 +1445,10 @@ namespace NuGetGallery
                 GetMock<IPackageService>()
                     .Setup(x => x.WillPackageBeOrphanedIfOwnerRemoved(It.IsAny<PackageRegistration>(), testOrganization))
                     .Returns(true);
+                var expectedPackagesViewModel = new DeleteAccountListPackageItemViewModel() { WillBeOrphaned = true };
+                GetMock<IViewModelHelper>()
+                    .Setup(vmh => vmh.CreateDeleteAccountListPackageItemViewModel(It.IsAny<Package>(), testOrganization, fakes.OrganizationOwnerAdmin))
+                    .Returns(expectedPackagesViewModel);
 
                 // Act & Assert
                 await RedirectsToDeleteRequest(
@@ -2226,13 +2234,17 @@ namespace NuGetGallery
                 GetMock<IPackageService>()
                     .Setup(stub => stub.FindPackagesByAnyMatchingOwner(testUser, It.IsAny<bool>(), false))
                     .Returns(userPackages);
+                var expectedPackagesViewModel = new DeleteAccountListPackageItemViewModel();
+                GetMock<IViewModelHelper>()
+                    .Setup(vmh => vmh.CreateDeleteAccountListPackageItemViewModel(userPackage, testUser, fakes.OrganizationAdmin))
+                    .Returns(expectedPackagesViewModel);
 
                 // act
                 var model = ResultAssert.IsView<DeleteOrganizationViewModel>(controller.Delete(accountName: username), viewName: "DeleteOrganizationAccount");
 
                 // Assert
                 Assert.Equal(username, model.AccountName);
-                Assert.Single(model.Packages);
+                Assert.Same(expectedPackagesViewModel, Assert.Single(model.Packages));
                 Assert.Single(model.AdditionalMembers);
                 Assert.True(model.HasAdditionalMembers);
             }

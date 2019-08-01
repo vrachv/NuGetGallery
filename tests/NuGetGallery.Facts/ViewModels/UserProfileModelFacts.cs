@@ -37,14 +37,11 @@ namespace NuGetGallery.ViewModels
 
             private ListPackageItemViewModel CreatePackageItemViewModel(string version)
             {
-                return new ViewModelHelper(Mock.Of<ISecurityPolicyService>()).CreateListPackageItemViewModel(new Package
+                return new ListPackageItemViewModel
                 {
-                    PackageRegistration = new PackageRegistration
-                    {
-                        DownloadCount = int.MaxValue
-                    },
+                    DownloadCount = int.MaxValue,
                     Version = version
-                }, currentUser: null);
+                };
             }
         }
     }

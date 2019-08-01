@@ -4,6 +4,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data.Entity.Migrations.Design;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -37,6 +38,7 @@ using NuGetGallery.Infrastructure.Mail.Messages;
 using NuGetGallery.Infrastructure.Mail.Requests;
 using NuGetGallery.Packaging;
 using NuGetGallery.Security;
+using RazorEngine.Compilation.ImpromptuInterface.Optimization;
 using Xunit;
 
 namespace NuGetGallery
@@ -76,7 +78,8 @@ namespace NuGetGallery
             Mock<ILicenseExpressionSplitter> licenseExpressionSplitter = null,
             Mock<IFeatureFlagService> featureFlagService = null,
             Mock<IPackageDeprecationService> deprecationService = null,
-            Mock<IABTestService> abTestService = null)
+            Mock<IABTestService> abTestService = null,
+            IViewModelHelper viewModelHelper = null)
         {
             packageService = packageService ?? new Mock<IPackageService>();
             packageUpdateService = packageUpdateService ?? new Mock<IPackageUpdateService>();
@@ -208,6 +211,8 @@ namespace NuGetGallery
 
             var diagnosticsService = new Mock<IDiagnosticsService>();
 
+            viewModelHelper = viewModelHelper ?? Mock.Of<IViewModelHelper>();
+
             var controller = new Mock<PackagesController>(
                 packageService.Object,
                 packageUpdateService.Object,
@@ -238,7 +243,8 @@ namespace NuGetGallery
                 licenseExpressionSplitter.Object,
                 featureFlagService.Object,
                 deprecationService.Object,
-                abTestService.Object);
+                abTestService.Object,
+                viewModelHelper);
 
             controller.CallBase = true;
             controller.Object.SetOwinContextOverride(Fakes.CreateOwinContext());
@@ -391,6 +397,8 @@ namespace NuGetGallery
         public class TheDisplayPackageMethod
             : TestContainer
         {
+            private Mock<IViewModelHelper> _viewModelHelperMock = new Mock<IViewModelHelper>();
+
             [Fact]
             public async Task GivenANonNormalizedVersionIt302sToTheNormalizedVersion()
             {
@@ -675,7 +683,8 @@ namespace NuGetGallery
                     packageService: packageService,
                     indexingService: indexingService,
                     httpContext: httpContext,
-                    deprecationService: deprecationService);
+                    deprecationService: deprecationService,
+                    viewModelHelper: _viewModelHelperMock.Object);
                 controller.SetCurrentUser(currentUser);
                 httpContext.Setup(c => c.Response.Cache).Returns(httpCachePolicy.Object);
                 var title = "A test package!";
@@ -708,11 +717,17 @@ namespace NuGetGallery
 
                 indexingService.Setup(i => i.GetLastWriteTime()).Returns(Task.FromResult((DateTime?)DateTime.UtcNow));
 
+                var expectedViewModel = new DisplayPackageViewModel { Id = id, Version = package.NormalizedVersion };
+                _viewModelHelperMock
+                    .Setup(vmh => vmh.CreateDisplayPackageViewModel(package, currentUser, It.IsAny<PackageDeprecation>(), It.IsAny<string>()))
+                    .Returns(expectedViewModel);
+
                 // Act
                 var result = await controller.DisplayPackage(id, normalizedVersion);
 
                 // Assert
                 var model = ResultAssert.IsView<DisplayPackageViewModel>(result);
+                Assert.Same(expectedViewModel, model);
                 Assert.Equal("Foo", model.Id);
                 Assert.Equal("1.1.1", model.Version);
 
@@ -730,7 +745,8 @@ namespace NuGetGallery
                     GetConfigurationService(),
                     packageService: packageService, 
                     indexingService: indexingService, 
-                    deprecationService: deprecationService);
+                    deprecationService: deprecationService,
+                    viewModelHelper: _viewModelHelperMock.Object);
                 controller.SetCurrentUser(TestUtility.FakeUser);
 
                 var id = "Foo";
@@ -783,12 +799,17 @@ namespace NuGetGallery
 
                 indexingService.Setup(i => i.GetLastWriteTime()).Returns(Task.FromResult((DateTime?)DateTime.UtcNow));
 
+                var expectedViewModel = new DisplayPackageViewModel { Id = id, Version = latestPackage.NormalizedVersion, LatestVersionSemVer2 = latestPackage.IsLatestSemVer2 };
+                _viewModelHelperMock
+                    .Setup(vmh => vmh.CreateDisplayPackageViewModel(latestPackage, TestUtility.FakeUser, It.IsAny<PackageDeprecation>(), It.IsAny<string>()))
+                    .Returns(expectedViewModel);
+
                 // Act
                 var result = await controller.DisplayPackage("Foo", GalleryConstants.AbsoluteLatestUrlString);
 
                 // Assert
                 var model = ResultAssert.IsView<DisplayPackageViewModel>(result);
-
+                Assert.Same(expectedViewModel, model);
                 Assert.Equal(id, model.Id);
                 // The page should select the first package that is IsLatestSemVer2
                 Assert.Equal(latestPackage.NormalizedVersion, model.Version);
@@ -808,7 +829,8 @@ namespace NuGetGallery
                     GetConfigurationService(),
                     packageService: packageService, 
                     indexingService: indexingService, 
-                    deprecationService: deprecationService);
+                    deprecationService: deprecationService,
+                    viewModelHelper: _viewModelHelperMock.Object);
                 controller.SetCurrentUser(TestUtility.FakeUser);
 
                 var id = "Foo";
@@ -837,14 +859,21 @@ namespace NuGetGallery
                     .Setup(x => x.GetDeprecationByPackage(notLatestPackage))
                     .Verifiable();
 
-                indexingService.Setup(i => i.GetLastWriteTime()).Returns(Task.FromResult((DateTime?)DateTime.UtcNow));
+                indexingService
+                    .Setup(i => i.GetLastWriteTime())
+                    .ReturnsAsync(DateTime.UtcNow);
+
+                var expectedViewModel = new DisplayPackageViewModel { Id = id, Version = notLatestPackage.NormalizedVersion, LatestVersionSemVer2 = notLatestPackage.IsLatestSemVer2 };
+                _viewModelHelperMock
+                    .Setup(vmh => vmh.CreateDisplayPackageViewModel(notLatestPackage, TestUtility.FakeUser, It.IsAny<PackageDeprecation>(), It.IsAny<string>()))
+                    .Returns(expectedViewModel);
 
                 // Act
                 var result = await controller.DisplayPackage("Foo", GalleryConstants.AbsoluteLatestUrlString);
 
                 // Assert
                 var model = ResultAssert.IsView<DisplayPackageViewModel>(result);
-
+                Assert.Same(expectedViewModel, model);
                 Assert.Equal(id, model.Id);
                 Assert.Equal(notLatestPackage.NormalizedVersion, model.Version);
                 Assert.False(model.LatestVersionSemVer2);
@@ -863,7 +892,8 @@ namespace NuGetGallery
                     GetConfigurationService(),
                     packageService: packageService,
                     indexingService: indexingService,
-                    deprecationService: deprecationService);
+                    deprecationService: deprecationService,
+                    viewModelHelper: _viewModelHelperMock.Object);
                 controller.SetCurrentUser(TestUtility.FakeUser);
 
                 var package = new Package()
@@ -887,20 +917,25 @@ namespace NuGetGallery
                     .Setup(p => p.FilterLatestPackage(packages, SemVerLevelKey.SemVer2, true))
                     .Returns(package);
 
+                var packageDeprecation = new PackageDeprecation();
                 deprecationService
                     .Setup(x => x.GetDeprecationByPackage(package))
+                    .Returns(packageDeprecation)
                     .Verifiable();
 
                 indexingService.Setup(i => i.GetLastWriteTime()).Returns(Task.FromResult((DateTime?)DateTime.UtcNow));
+
+                var expectedViewModel = new DisplayPackageViewModel { };
+                _viewModelHelperMock
+                    .Setup(vmh => vmh.CreateDisplayPackageViewModel(package, TestUtility.FakeUser, It.IsAny<PackageDeprecation>(), It.IsAny<string>()))
+                    .Returns(expectedViewModel);
 
                 // Act
                 var result = await controller.DisplayPackage("Foo", null);
 
                 // Assert
                 var model = ResultAssert.IsView<DisplayPackageViewModel>(result);
-                Assert.Equal("Foo", model.Id);
-                Assert.Equal("1.1.1", model.Version);
-                Assert.Null(model.ReadMeHtml);
+                Assert.Same(expectedViewModel, model);
 
                 deprecationService.Verify();
             }
@@ -968,7 +1003,8 @@ namespace NuGetGallery
                     packageService: packageService, 
                     indexingService: indexingService, 
                     packageFileService: fileService,
-                    deprecationService: deprecationService);
+                    deprecationService: deprecationService,
+                    viewModelHelper: _viewModelHelperMock.Object);
                 controller.SetCurrentUser(TestUtility.FakeUser);
 
                 var id = "Foo";
@@ -1002,12 +1038,21 @@ namespace NuGetGallery
 
                 if (hasReadMe)
                 {
-                    fileService.Setup(f => f.DownloadReadMeMdFileAsync(It.IsAny<Package>())).Returns(Task.FromResult(readMeHtml));
+                    fileService.Setup(f => f.DownloadReadMeMdFileAsync(It.IsAny<Package>())).ReturnsAsync(readMeHtml);
                 }
+
+                var expectedReadme = hasReadMe ? readMeHtml : null;
+                var expectedViewModel = new DisplayPackageViewModel { Id = package.Id, Version = package.Version };
+                _viewModelHelperMock
+                    .Setup(vmh => vmh.CreateDisplayPackageViewModel(package, TestUtility.FakeUser, It.IsAny<PackageDeprecation>(), It.IsAny<string>()))
+                    .Returns(expectedViewModel)
+                    .Callback<Package, User, PackageDeprecation, string>((_1, _2, _3, readmeHtml) => expectedViewModel.ReadMeHtml = readmeHtml)
+                    .Verifiable();
 
                 var result = await controller.DisplayPackage(id, /*version*/null);
 
                 deprecationService.Verify();
+                _viewModelHelperMock.Verify();
 
                 return result;
             }
@@ -1028,7 +1073,8 @@ namespace NuGetGallery
                     indexingService: indexingService, 
                     packageFileService: fileService, 
                     validationService: validationService,
-                    deprecationService: deprecationService);
+                    deprecationService: deprecationService,
+                    viewModelHelper: _viewModelHelperMock.Object);
                 controller.SetCurrentUser(TestUtility.FakeUser);
 
                 var package = new Package()
@@ -1063,15 +1109,18 @@ namespace NuGetGallery
                     new TestIssue("This should not be deduplicated by the controller layer"),
                 };
 
-                validationService.Setup(v => v.GetLatestPackageValidationIssues(It.IsAny<Package>()))
-                    .Returns(expectedIssues);
+                var expectedViewModel = new DisplayPackageViewModel { Id = package.Id, Version = package.Version, PackageValidationIssues = expectedIssues };
+                _viewModelHelperMock
+                    .Setup(vmh => vmh.CreateDisplayPackageViewModel(package, TestUtility.FakeUser, It.IsAny<PackageDeprecation>(), It.IsAny<string>()))
+                    .Returns(expectedViewModel);
 
                 // Act
                 var result = await controller.DisplayPackage("Foo", version: null);
 
                 // Assert
                 var model = ResultAssert.IsView<DisplayPackageViewModel>(result);
-                Assert.Equal(model.PackageValidationIssues, expectedIssues);
+                Assert.Same(expectedViewModel, model);
+                Assert.Same(expectedIssues, model.PackageValidationIssues);
 
                 deprecationService.Verify();
             }
@@ -1088,7 +1137,8 @@ namespace NuGetGallery
                     GetConfigurationService(),
                     packageService: packageService,
                     featureFlagService: featureFlagService,
-                    deprecationService: deprecationService);
+                    deprecationService: deprecationService,
+                    viewModelHelper: _viewModelHelperMock.Object);
                 controller.SetCurrentUser(TestUtility.FakeUser);
 
                 var id = "Foo";
@@ -1121,11 +1171,17 @@ namespace NuGetGallery
                     .Setup(x => x.GetDeprecationByPackage(package))
                     .Verifiable();
 
+                var expectedViewModel = new DisplayPackageViewModel { Id = id, Version = package.NormalizedVersion, IsAtomFeedEnabled = isAtomFeedEnabled };
+                _viewModelHelperMock
+                    .Setup(vmh => vmh.CreateDisplayPackageViewModel(package, TestUtility.FakeUser, It.IsAny<PackageDeprecation>(), It.IsAny<string>()))
+                    .Returns(expectedViewModel);
+
                 // Arrange and Act
                 var result = await controller.DisplayPackage(id, version: null);
 
                 // Assert
                 var model = ResultAssert.IsView<DisplayPackageViewModel>(result);
+                Assert.Same(expectedViewModel, model);
                 Assert.Equal(isAtomFeedEnabled, model.IsAtomFeedEnabled);
 
                 deprecationService.Verify();
@@ -1143,7 +1199,8 @@ namespace NuGetGallery
                     GetConfigurationService(),
                     packageService: packageService,
                     featureFlagService: featureFlagService,
-                    deprecationService: deprecationService);
+                    deprecationService: deprecationService,
+                    viewModelHelper: _viewModelHelperMock.Object);
 
                 var id = "Foo";
                 var package = new Package()
@@ -1175,11 +1232,17 @@ namespace NuGetGallery
                     .Setup(x => x.GetDeprecationByPackage(package))
                     .Verifiable();
 
+                var expectedViewModel = new DisplayPackageViewModel { Id = package.Id, Version = package.Version, IsPackageDeprecationEnabled = isDeprecationEnabled };
+                _viewModelHelperMock
+                    .Setup(vmh => vmh.CreateDisplayPackageViewModel(package, It.IsAny<User>(), It.IsAny<PackageDeprecation>(), It.IsAny<string>()))
+                    .Returns(expectedViewModel);
+
                 // Arrange and Act
                 var result = await controller.DisplayPackage(id, version: null);
 
                 // Assert
                 var model = ResultAssert.IsView<DisplayPackageViewModel>(result);
+                Assert.Same(expectedViewModel, model);
                 Assert.Equal(isDeprecationEnabled, model.IsPackageDeprecationEnabled);
 
                 deprecationService.Verify();
@@ -1197,7 +1260,8 @@ namespace NuGetGallery
                     GetConfigurationService(),
                     packageService: packageService,
                     featureFlagService: featureFlagService,
-                    deprecationService: deprecationService);
+                    deprecationService: deprecationService,
+                    viewModelHelper: _viewModelHelperMock.Object);
                 controller.SetCurrentUser(TestUtility.FakeUser);
 
                 var id = "Foo";
@@ -1230,11 +1294,17 @@ namespace NuGetGallery
                     .Setup(x => x.GetDeprecationByPackage(package))
                     .Verifiable();
 
+                var expectedViewModel = new DisplayPackageViewModel { Id = package.Id, Version = package.Version, IsPackageDeprecationEnabled = isDeprecationEnabled };
+                _viewModelHelperMock
+                    .Setup(vmh => vmh.CreateDisplayPackageViewModel(package, It.IsAny<User>(), It.IsAny<PackageDeprecation>(), It.IsAny<string>()))
+                    .Returns(expectedViewModel);
+
                 // Arrange and Act
                 var result = await controller.DisplayPackage(id, version: null);
 
                 // Assert
                 var model = ResultAssert.IsView<DisplayPackageViewModel>(result);
+                Assert.Same(expectedViewModel, model);
                 Assert.Equal(isDeprecationEnabled, model.IsPackageDeprecationEnabled);
 
                 deprecationService.Verify();
@@ -1244,15 +1314,11 @@ namespace NuGetGallery
             public async Task SplitsLicenseExpressionWhenProvided()
             {
                 const string expression = "some expression";
-                var splitterMock = new Mock<ILicenseExpressionSplitter>();
                 var packageService = new Mock<IPackageService>();
                 var indexingService = new Mock<IIndexingService>();
                 var deprecationService = new Mock<IPackageDeprecationService>();
 
                 var segments = new List<CompositeLicenseExpressionSegment>();
-                splitterMock
-                    .Setup(les => les.SplitExpression(expression))
-                    .Returns(segments);
 
                 var id = "Foo";
                 var package = new Package()
@@ -1283,23 +1349,24 @@ namespace NuGetGallery
 
                 indexingService.Setup(i => i.GetLastWriteTime()).Returns(Task.FromResult((DateTime?)DateTime.UtcNow));
 
+                var expectedViewModel = new DisplayPackageViewModel { Id = package.Id, Version = package.Version, LicenseExpressionSegments = segments };
+                _viewModelHelperMock
+                    .Setup(vmh => vmh.CreateDisplayPackageViewModel(package, It.IsAny<User>(), It.IsAny<PackageDeprecation>(), It.IsAny<string>()))
+                    .Returns(expectedViewModel);
+
                 var controller = CreateController(
                     GetConfigurationService(),
                     packageService: packageService,
                     indexingService: indexingService,
-                    licenseExpressionSplitter: splitterMock,
-                    deprecationService: deprecationService);
+                    deprecationService: deprecationService,
+                    viewModelHelper: _viewModelHelperMock.Object);
 
                 var result = await controller.DisplayPackage(id, version: null);
-
-                splitterMock
-                    .Verify(les => les.SplitExpression(expression), Times.Once);
-                splitterMock
-                    .Verify(les => les.SplitExpression(It.IsAny<string>()), Times.Once);
 
                 deprecationService.Verify();
 
                 var model = ResultAssert.IsView<DisplayPackageViewModel>(result);
+                Assert.Same(expectedViewModel, model);
                 Assert.Same(segments, model.LicenseExpressionSegments);
             }
 
@@ -2419,6 +2486,7 @@ namespace NuGetGallery
         {
             protected PackageRegistration PackageRegistration;
             protected Package Package;
+            protected ViewModelHelper ViewModelHelper;
 
             public TheManageMethod()
             {
@@ -2447,6 +2515,14 @@ namespace NuGetGallery
 
                 PackageRegistration.Packages.Add(Package);
                 PackageRegistration.Packages.Add(olderPackageVersion);
+                ViewModelHelper = new ViewModelHelper(
+                    Mock.Of<ISecurityPolicyService>(),
+                    Mock.Of<IValidationService>(),
+                    Mock.Of<IContentObjectService>(),
+                    Mock.Of<IFeatureFlagService>(),
+                    Mock.Of<ILicenseExpressionSplitter>(),
+                    Mock.Of<ITelemetryService>(),
+                    Mock.Of<IPackageService>());
             }
 
             protected abstract Task<ActionResult> GetManageResult(PackagesController controller);
@@ -2494,7 +2570,8 @@ namespace NuGetGallery
                 var packageService = SetupPackageService();
                 var controller = CreateController(
                     GetConfigurationService(),
-                    packageService: packageService);
+                    packageService: packageService,
+                    viewModelHelper: ViewModelHelper);
                 controller.SetCurrentUser(currentUser);
 
                 var routeCollection = new RouteCollection();
@@ -2549,7 +2626,8 @@ namespace NuGetGallery
                 var packageService = SetupPackageService();
                 var controller = CreateController(
                     GetConfigurationService(),
-                    packageService: packageService);
+                    packageService: packageService,
+                    viewModelHelper: ViewModelHelper);
                 controller.SetCurrentUser(currentUser);
 
                 var routeCollection = new RouteCollection();
@@ -2594,7 +2672,8 @@ namespace NuGetGallery
                 var packageService = SetupPackageService();
                 var controller = CreateController(
                     GetConfigurationService(),
-                    packageService: packageService);
+                    packageService: packageService,
+                    viewModelHelper: ViewModelHelper);
                 controller.SetCurrentUser(currentUser);
 
                 var routeCollection = new RouteCollection();
@@ -2630,7 +2709,8 @@ namespace NuGetGallery
                 var controller = CreateController(
                     GetConfigurationService(),
                     packageService: packageService,
-                    readMeService: readMeService.Object);
+                    readMeService: readMeService.Object,
+                    viewModelHelper: ViewModelHelper);
                 controller.SetCurrentUser(currentUser);
 
                 var routeCollection = new RouteCollection();
@@ -2663,7 +2743,8 @@ namespace NuGetGallery
 
                 var controller = CreateController(
                     GetConfigurationService(),
-                    packageService: packageService);
+                    packageService: packageService,
+                    viewModelHelper: ViewModelHelper);
                 controller.SetCurrentUser(currentUser);
 
                 var routeCollection = new RouteCollection();
@@ -2707,7 +2788,8 @@ namespace NuGetGallery
                 var controller = CreateController(
                     GetConfigurationService(),
                     packageService: packageService,
-                    featureFlagService: featureFlagService);
+                    featureFlagService: featureFlagService,
+                    viewModelHelper: ViewModelHelper);
                 controller.SetCurrentUser(currentUser);
 
                 var routeCollection = new RouteCollection();
@@ -2812,6 +2894,8 @@ namespace NuGetGallery
             protected string _packageId = "CrestedGecko";
             protected PackageRegistration _packageRegistration;
             protected Package _package;
+            protected Mock<IViewModelHelper> _viewModelHelper;
+            protected DeletePackageViewModel _deletePackageViewModel;
 
             public TheDeleteSymbolsMethod()
             {
@@ -2958,27 +3042,20 @@ namespace NuGetGallery
                 }
             }
 
-            [Theory]
-            [MemberData(nameof(Owner_Data))]
-            public void WhenPackageRegistrationIsLockedReturnsLockedState(User currentUser, User owner)
-            {
-                _packageRegistration.IsLocked = true;
-
-                var result = GetDeleteSymbolsResult(currentUser, owner, out var controller);
-
-                // Assert
-                var model = ResultAssert.IsView<DeletePackageViewModel>(result);
-                Assert.True(model.IsLocked);
-            }
-
             private ActionResult GetDeleteSymbolsResult(User currentUser, User owner, out PackagesController controller)
             {
                 _packageRegistration.Owners.Add(owner);
+                _deletePackageViewModel = new DeletePackageViewModel();
+                _viewModelHelper = new Mock<IViewModelHelper>();
+                _viewModelHelper
+                    .Setup(vmh => vmh.CreateDeletePackageViewModel(It.IsAny<Package>(), It.IsAny<User>(), It.IsAny<IReadOnlyList<ReportPackageReason>>()))
+                    .Returns(_deletePackageViewModel);
 
                 var packageService = CreatePackageService();
                 controller = CreateController(
                     GetConfigurationService(),
-                    packageService: packageService);
+                    packageService: packageService,
+                    viewModelHelper: _viewModelHelper.Object);
                 controller.SetCurrentUser(currentUser);
 
                 var routeCollection = new RouteCollection();
@@ -8238,6 +8315,7 @@ namespace NuGetGallery
             private readonly Mock<IPackageService> _packageService;
             private readonly Mock<IPackageFileService> _packageFileService;
             private readonly Mock<ICoreLicenseFileService> _coreLicenseFileService;
+            private readonly Mock<IViewModelHelper> _viewModelHelper;
             private string _packageId = "packageId";
             private string _packageVersion = "1.0.0";
 
@@ -8246,6 +8324,7 @@ namespace NuGetGallery
                 _packageService = new Mock<IPackageService>();
                 _packageFileService = new Mock<IPackageFileService>();
                 _coreLicenseFileService = new Mock<ICoreLicenseFileService>();
+                _viewModelHelper = new Mock<IViewModelHelper>();
             }
 
             [Fact]
@@ -8265,45 +8344,71 @@ namespace NuGetGallery
             }
 
             [Theory]
-            [InlineData("MIT")]
-            [InlineData("some expression")]
-            [InlineData("(MIT OR GPL-3.0-only)")]
-            public async Task GivenValidPackageSplitExpressionAndSetSegmentsWhenLicenseExpressionExists(string licenseExpression)
+            [InlineData(null, "MIT", EmbeddedLicenseFileType.Absent)]
+            [InlineData(null, "some expression", EmbeddedLicenseFileType.Absent)]
+            [InlineData(null, "(MIT OR GPL-3.0-only)", EmbeddedLicenseFileType.Absent)]
+            [InlineData(null, null, EmbeddedLicenseFileType.PlainText)]
+            [InlineData(null, null, EmbeddedLicenseFileType.Markdown)]
+            [InlineData("https://nuget.test/license", null, EmbeddedLicenseFileType.Absent)]
+            public async Task CallsIntoViewModelHelperProperly(string licenseUrlString, string licenseExpression, EmbeddedLicenseFileType embeddedLicenseFileType)
             {
                 // arrange
+                const string licenseFileContents = "Some license text";
                 var package = new Package
                 {
                     PackageRegistration = new PackageRegistration { Id = _packageId },
                     Version = _packageVersion,
-                    LicenseExpression = licenseExpression
+                    LicenseExpression = licenseExpression,
+                    EmbeddedLicenseType = embeddedLicenseFileType,
+                    LicenseUrl = licenseUrlString,
                 };
 
-                var splitterMock = new Mock<ILicenseExpressionSplitter>();
-                var segments = new List<CompositeLicenseExpressionSegment>();
-                splitterMock
-                    .Setup(les => les.SplitExpression(licenseExpression))
-                    .Returns(segments);
+                string expectedLicenseText = null;
+                if (embeddedLicenseFileType != EmbeddedLicenseFileType.Absent)
+                {
+                    var fakeFileStream = new MemoryStream(Encoding.UTF8.GetBytes(licenseFileContents));
+                    _coreLicenseFileService
+                        .Setup(p => p.DownloadLicenseFileAsync(package))
+                        .Returns(Task.FromResult<Stream>(fakeFileStream))
+                        .Verifiable();
+                    expectedLicenseText = licenseFileContents;
+                }
+
+                Mock<ILicenseExpressionSplitter> splitterMock = null;
+                List<CompositeLicenseExpressionSegment> segments = null;
+                if (licenseExpression != null)
+                {
+                    splitterMock = new Mock<ILicenseExpressionSplitter>();
+                    segments = new List<CompositeLicenseExpressionSegment>();
+                    splitterMock
+                        .Setup(les => les.SplitExpression(licenseExpression))
+                        .Returns(segments)
+                        .Verifiable();
+                }
+
+                var expectedVM = new DisplayLicenseViewModel();
+                _viewModelHelper
+                    .Setup(vmh => vmh.CreateDisplayLicenseViewModel(package, segments, It.Is<string>(c => c == expectedLicenseText)))
+                    .Returns(expectedVM)
+                    .Verifiable();
 
                 _packageService.Setup(p => p.FindPackageByIdAndVersionStrict(_packageId, _packageVersion)).Returns(package);
                 var controller = CreateController(
                     GetConfigurationService(),
                     packageService: _packageService,
-                    licenseExpressionSplitter: splitterMock);
+                    licenseExpressionSplitter: splitterMock,
+                    coreLicenseFileService: _coreLicenseFileService,
+                    viewModelHelper: _viewModelHelper.Object);
 
-                // act
+                // act 
                 var result = await controller.License(_packageId, _packageVersion);
 
                 // assert
-                splitterMock
-                    .Verify(les => les.SplitExpression(licenseExpression), Times.Once);
-                splitterMock
-                    .Verify(les => les.SplitExpression(It.IsAny<string>()), Times.Once);
-
+                _coreLicenseFileService.Verify();
+                splitterMock?.Verify();
+                _viewModelHelper.Verify();
                 var model = ResultAssert.IsView<DisplayLicenseViewModel>(result);
-                Assert.Equal(_packageId, model.Id);
-                Assert.Equal(_packageVersion, model.Version);
-                Assert.Equal(licenseExpression, model.LicenseExpression);
-                Assert.Equal(segments, model.LicenseExpressionSegments);
+                Assert.Same(expectedVM, model);
             }
 
             [Fact]
@@ -8349,13 +8454,18 @@ namespace NuGetGallery
                 var controller = CreateController(
                     GetConfigurationService(),
                     packageService: _packageService,
-                    coreLicenseFileService: _coreLicenseFileService);
+                    coreLicenseFileService: _coreLicenseFileService,
+                    viewModelHelper: _viewModelHelper.Object);
 
                 var licenseFileContents = "This is a license file";
                 var fakeFileStream = new MemoryStream(Encoding.UTF8.GetBytes(licenseFileContents));
                 _coreLicenseFileService
                     .Setup(p => p.DownloadLicenseFileAsync(package))
                     .Returns(Task.FromResult<Stream>(fakeFileStream));
+                var expectedVM = new DisplayLicenseViewModel();
+                _viewModelHelper
+                    .Setup(vmh => vmh.CreateDisplayLicenseViewModel(package, It.IsAny<IReadOnlyCollection<CompositeLicenseExpressionSegment>>(), It.Is<string>(c => c == licenseFileContents)))
+                    .Returns(expectedVM);
 
                 // Act
                 var result = await controller.License(_packageId, _packageVersion);
@@ -8364,8 +8474,10 @@ namespace NuGetGallery
                 _coreLicenseFileService
                     .Verify(p => p.DownloadLicenseFileAsync(package),
                         Times.Once);
+                _viewModelHelper
+                    .Verify(vmh => vmh.CreateDisplayLicenseViewModel(package, It.IsAny<IReadOnlyCollection<CompositeLicenseExpressionSegment>>(), It.Is<string>(c => c == licenseFileContents)), Times.Once);
                 var model = ResultAssert.IsView<DisplayLicenseViewModel>(result);
-                Assert.Equal(licenseFileContents, model.LicenseFileContents);
+                Assert.Same(expectedVM, model);
             }
 
             [Theory]
@@ -8394,57 +8506,6 @@ namespace NuGetGallery
 
                 // Act & Assert
                 await Assert.ThrowsAsync<InvalidOperationException>(() => controller.License(_packageId, _packageVersion));
-            }
-
-            [Theory]
-            [InlineData(EmbeddedLicenseFileType.Markdown)]
-            [InlineData(EmbeddedLicenseFileType.PlainText)]
-            public async Task GivenValidPackageInfoButInvalidLicenseFileThrowException(EmbeddedLicenseFileType embeddedLicenseFileType)
-            {
-                // Arrange
-                var package = new Package
-                {
-                    PackageRegistration = new PackageRegistration { Id = _packageId },
-                    Version = _packageVersion,
-                };
-                package.EmbeddedLicenseType = embeddedLicenseFileType;
-
-                var expectedExceptionMessage = "Downloading license file fails!";
-                _packageService.Setup(p => p.FindPackageByIdAndVersionStrict(_packageId, _packageVersion)).Returns(package);
-                _coreLicenseFileService.Setup(p => p.DownloadLicenseFileAsync(package)).Throws(new Exception(expectedExceptionMessage));
-                var controller = CreateController(
-                    GetConfigurationService(),
-                    packageService: _packageService,
-                    coreLicenseFileService: _coreLicenseFileService);
-
-                // Act & Assert
-                var exception = await Assert.ThrowsAnyAsync<Exception>(() => controller.License(_packageId, _packageVersion));
-                Assert.Equal(expectedExceptionMessage, exception.Message);
-            }
-
-            [Fact]
-            public async Task GivenValidPackageInfoSetLicenseUrlWhenLicenseUrlExists()
-            {
-                // Arrange
-                var licenseUrl = "https://testlicenseurl/";
-                var package = new Package
-                {
-                    PackageRegistration = new PackageRegistration { Id = _packageId },
-                    Version = _packageVersion,
-                    LicenseUrl = licenseUrl
-                };
-
-                _packageService.Setup(p => p.FindPackageByIdAndVersionStrict(_packageId, _packageVersion)).Returns(package);
-                var controller = CreateController(
-                    GetConfigurationService(),
-                    packageService: _packageService);
-
-                // Act
-                var result = await controller.License(_packageId, _packageVersion);
-
-                // Assert
-                var model = ResultAssert.IsView<DisplayLicenseViewModel>(result);
-                Assert.Equal(licenseUrl, model.LicenseUrl);
             }
         }
 
