@@ -209,7 +209,6 @@ namespace GalleryTools.Commands
                     var packages = _entitiesContext.Packages
                         .Where(p => p.PackageRegistration.Id == range.PackageId)
                         .Include(p => p.Vulnerabilities)
-                        .Include(p => p.Vulnerabilities)
                         .ToList();
 
                     var versionRange = VersionRange.Parse(range.PackageVersionRange);
