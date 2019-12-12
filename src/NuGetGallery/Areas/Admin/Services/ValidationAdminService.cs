@@ -56,6 +56,26 @@ namespace NuGetGallery.Areas.Admin.Services
                 .ToList();
         }
 
+        public IReadOnlyList<PackageValidationSet> GetValidatingPackages(int amount)
+        {
+            var validatingPackages = _packages
+                .GetAll()
+                .Where(p => p.PackageStatusKey == PackageStatus.Validating)
+                .OrderBy(p => p.Created)
+                .Take(amount)
+                .ToList();
+
+            var validationSets = new Dictionary<long, PackageValidationSet>();
+            foreach (var package in validatingPackages)
+            {
+                SearchByPackageIdAndVersion(validationSets, package.Id, package.NormalizedVersion);
+            }
+
+            return validationSets
+                .Values
+                .ToList();
+        }
+
         public PackageDeletedStatus GetDeletedStatus(int key, ValidatingType validatingType)
         {
             switch (validatingType)
@@ -173,17 +193,22 @@ namespace NuGetGallery.Areas.Admin.Services
                 {
                     var normalizedVersion = version.ToNormalizedString();
                     var id = pieces[0];
-                    var matchedSets = _validationSets
-                        .GetAll()
-                        .Include(x => x.PackageValidations)
-                        .Where(x => x.PackageId == id && x.PackageNormalizedVersion == normalizedVersion)
-                        .ToList();
-
-                    foreach (var validationSet in matchedSets)
-                    {
-                        validationSets[validationSet.Key] = validationSet;
-                    }
+                    SearchByPackageIdAndVersion(validationSets, id, normalizedVersion);
                 }
+            }
+        }
+
+        private void SearchByPackageIdAndVersion(Dictionary<long, PackageValidationSet> validationSets, string id, string normalizedVersion)
+        {
+            var matchedSets = _validationSets
+                .GetAll()
+                .Include(x => x.PackageValidations)
+                .Where(x => x.PackageId == id && x.PackageNormalizedVersion == normalizedVersion)
+                .ToList();
+
+            foreach (var validationSet in matchedSets)
+            {
+                validationSets[validationSet.Key] = validationSet;
             }
         }
 

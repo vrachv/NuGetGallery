@@ -38,6 +38,17 @@ namespace NuGetGallery.Areas.Admin.Controllers
             return View(nameof(Index), new ValidationPageViewModel(q, validatedPackages));
         }
 
+        [HttpGet]
+        public virtual ActionResult ShowValidating()
+        {
+            var packageValidationSets = _validationAdminService.GetValidatingPackages(20);
+            var validatedPackages = new List<ValidatedPackageViewModel>();
+            AppendValidatedPackages(validatedPackages, packageValidationSets, ValidatingType.Package);
+            AppendValidatedPackages(validatedPackages, packageValidationSets, ValidatingType.SymbolPackage);
+
+            return View(nameof(Index), new ValidationPageViewModel("", validatedPackages));
+        }
+
         private void AppendValidatedPackages(List<ValidatedPackageViewModel> validatedPackages, IEnumerable<PackageValidationSet> validationSets, ValidatingType validatingType)
         {
             var groups = validationSets

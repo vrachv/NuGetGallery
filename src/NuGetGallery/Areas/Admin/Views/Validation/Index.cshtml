@@ -25,6 +25,11 @@
             <input type="submit" value="Search" />
         </p>
     </form>
+    <form method="get" action="@Url.Action(actionName: "ShowValidating")">
+        <p>
+            <input type="submit" value="Validating" />
+        </p>
+    </form>
 
     @if (Model.HasQuery && !Model.HasResults)
     {
