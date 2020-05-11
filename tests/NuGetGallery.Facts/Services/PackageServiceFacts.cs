@@ -30,7 +30,8 @@ namespace NuGetGallery
             IAuditingService auditingService = null,
             Mock<ITelemetryService> telemetryService = null,
             Mock<ISecurityPolicyService> securityPolicyService = null,
-            Action<Mock<PackageService>> setup = null)
+            Action<Mock<PackageService>> setup = null,
+            Mock<IEntitiesContext> context = null)
         {
             packageRegistrationRepository = packageRegistrationRepository ?? new Mock<IEntityRepository<PackageRegistration>>();
             packageRepository = packageRepository ?? new Mock<IEntityRepository<Package>>();
@@ -38,6 +39,8 @@ namespace NuGetGallery
             auditingService = auditingService ?? new TestAuditingService();
             telemetryService = telemetryService ?? new Mock<ITelemetryService>();
             securityPolicyService = securityPolicyService ?? new Mock<ISecurityPolicyService>();
+            context = context ?? new Mock<IEntitiesContext>();
+
 
             var packageService = new Mock<PackageService>(
                 packageRegistrationRepository.Object,
@@ -45,7 +48,8 @@ namespace NuGetGallery
                 certificateRepository.Object,
                 auditingService,
                 telemetryService.Object,
-                securityPolicyService.Object);
+                securityPolicyService.Object,
+                context.Object);
 
             packageService.CallBase = true;
 
@@ -2511,6 +2515,11 @@ namespace NuGetGallery
 
                 Assert.Equal(expectedFlag, package.HasEmbeddedIcon);
             }
+        }
+
+        public class TheGetPackageDependentsMethod
+        {
+
         }
     }
 }

@@ -80,6 +80,14 @@ namespace NuGetGallery
         /// <returns>Whether or not the Flight is enabled for the user</returns>
         bool IsGitHubUsageEnabled(User user);
 
+
+        /// <summary>
+        /// Whether a user can see the "Package Dependents" section in a package's display page
+        /// </summary>
+        /// <param name="user">The user to test for the Flight</param>
+        /// <returns>Whether or not the Flight is enabled for the user</returns>
+        bool IsPackageDependentsEnabled(User user);
+
         /// <summary>
         /// Whether the OData controllers use the read-only replica.
         /// </summary>

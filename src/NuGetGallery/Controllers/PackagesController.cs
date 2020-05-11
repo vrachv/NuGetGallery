@@ -820,6 +820,7 @@ namespace NuGetGallery
                 return HttpNotFound();
             }
 
+
             var readme = await _readMeService.GetReadMeHtmlAsync(package);
             var deprecations = _deprecationService.GetDeprecationsById(id);
             var packageKeyToDeprecation = deprecations
@@ -848,7 +849,41 @@ namespace NuGetGallery
             model.IsPackageDeprecationEnabled = _featureFlagService.IsManageDeprecationEnabled(currentUser, allVersions);
             model.IsPackageRenamesEnabled = _featureFlagService.IsPackageRenamesEnabled(currentUser);
 
-            if (model.IsGitHubUsageEnabled = _featureFlagService.IsGitHubUsageEnabled(currentUser))
+            // Different switches for feature
+            var ispackageDepentsEnabled = (model.IsPackageDependentsEnabled = _featureFlagService.IsPackageDependentsEnabled(currentUser));
+            
+            if (ispackageDepentsEnabled)
+            {
+                // Caching dependence
+
+                CreatePackageDependents dependence; 
+                var cacheKey = "cache dependents_" + id.ToLowerInvariant();
+
+                var cachedResults = HttpContext.Cache.Get(cacheKey);
+                if (cachedResults == null)
+                {
+                    dependence = _packageService.GetPackageDependents(id);
+
+                    // note: this is a per instance cache
+                    HttpContext.Cache.Add(
+                        cacheKey,
+                        dependence,
+                        null,
+                        DateTime.UtcNow.AddMinutes(5),
+                        Cache.NoSlidingExpiration,
+                        CacheItemPriority.Default, null);
+                }
+
+                else
+                {
+                    // default for /packages view
+                    dependence = (CreatePackageDependents)cachedResults;
+                }
+                model.packageDependents = dependence;
+            }
+            
+
+            if(model.IsGitHubUsageEnabled = _featureFlagService.IsGitHubUsageEnabled(currentUser))
             {
                 model.GitHubDependenciesInformation = _contentObjectService.GitHubUsageConfiguration.GetPackageInformation(id);
             }

@@ -66,6 +66,8 @@ $(function () {
     window.nuget.configureExpanderHeading("dependency-groups");
     window.nuget.configureExpanderHeading("github-usage");
     window.nuget.configureExpanderHeading("version-history");
+    window.nuget.configureExpanderHeading("dependents-groups");
+
     window.nuget.configureExpander(
         "hidden-versions",
         "CalculatorAddition",

@@ -50,7 +50,7 @@ namespace NuGetGallery
             [InlineData("[]")]
             [InlineData("null")]
             [InlineData(@"{""ps"":42}")]
-            [InlineData(@"{""v"":2,""ps"":42}")]
+            [InlineData(@"{""v"":2,""ps"":42}")] 
             [InlineData(@"{""v"":1}")]
             [InlineData(@"{""v"":1,""ps"":-1}")]
             [InlineData(@"{""v"":1,""ps"":0}")]
@@ -63,9 +63,10 @@ namespace NuGetGallery
                 Assert.Null(enrollment);
             }
 
+
             [Theory]
             [InlineData(@"{""v"":1,""ps"":42}", 42)]
-            [InlineData(@"{""v"":1,""ps"":42,""zzz"":false}", 42)]
+            [InlineData(@"{""v"":1,""ps"":42,""zzz"":false}", 42)] 
             [InlineData(@"{""v"":1,""ps"":1}", 1)]
             [InlineData(@"{""v"":1,""ps"":100}", 100)]
             public void ParsesValid(string input, int previewSearchBucket)
@@ -74,8 +75,7 @@ namespace NuGetGallery
 
                 Assert.True(success, "The derialization should have succeeded.");
                 Assert.NotNull(enrollment);
-                Assert.Equal(ABTestEnrollmentState.Active, enrollment.State);
-                Assert.Equal(1, enrollment.SchemaVersion);
+                Assert.Equal(ABTestEnrollmentState.Active, enrollment.State); 
                 Assert.Equal(previewSearchBucket, enrollment.PreviewSearchBucket);
             }
         }

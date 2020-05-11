@@ -16,5 +16,6 @@ namespace NuGetGallery.Services
         /// hijack experience.
         /// </summary>
         int PreviewHijackPercentage { get; }
+
     }
 }

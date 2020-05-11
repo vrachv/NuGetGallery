@@ -35,7 +35,7 @@ namespace NuGetGallery
                 previewSearchBucket: GetRandomWholePercentage());
 
             _telemetryService.TrackABTestEnrollmentInitialized(
-                enrollment.SchemaVersion,
+                enrollment.SchemaVersion, 
                 enrollment.PreviewSearchBucket);
 
             return enrollment;
@@ -69,7 +69,6 @@ namespace NuGetGallery
                 SchemaVersion = SchemaVersion1,
                 PreviewSearchBucket = enrollment.PreviewSearchBucket,
             };
-
             return JsonConvert.SerializeObject(deserialized);
         }
 
@@ -103,6 +102,7 @@ namespace NuGetGallery
                 return false;
             }
         }
+
 
         private static bool IsNotPercentage(int input)
         {
