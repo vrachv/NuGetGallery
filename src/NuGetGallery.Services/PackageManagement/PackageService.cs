@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Data.Common;
 using System.Data.Entity;
+using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -17,6 +18,7 @@ using NuGet.Versioning;
 using NuGetGallery.Auditing;
 using NuGetGallery.Packaging;
 using NuGetGallery.Security;
+using NuGetGallery.Services.PackageManagement;
 
 namespace NuGetGallery
 {
@@ -148,77 +150,33 @@ namespace NuGetGallery
 
         public PackageDependents GetPackageDependents(string id)
         {
-            PackageDependents res = new PackageDependents();
-
-            using (var connection = _entitiesContext.GetDatabase().Connection)
-            { 
-                connection.Open();
-                res.PackageList = GetListOfDependents(id, connection);
-                res.DependentCount = ShowDependentCount(id, connection);
-                return res;
-            }
-        }
-
-        private IReadOnlyCollection<PackageDependent> GetListOfDependents(String id, DbConnection connection)
-        {
-            var packageDependentsList = new List<PackageDependent>();
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = @"SELECT TOP 10 PackageRegistrations.id, PackageRegistrations.DownloadCount, Packages.Description
-	                FROM PackageDependencies 
-	                INNER JOIN Packages ON Packages.[key] = PackageDependencies.PackageKey
-	                INNER JOIN PackageRegistrations ON Packages.PackageRegistrationKey = PackageRegistrations.[key]
-	                WHERE PackageDependencies.id = @id AND Packages.IsLatestSemVer2 = 1
-	                GROUP BY PackageRegistrations.id, PackageRegistrations.DownloadCount, Packages.Description
-                    ORDER BY PackageRegistrations.DownloadCount DESC";
-                
-                var parameter = command.CreateParameter();
-                parameter.ParameterName = "@id";
-                parameter.Value = id;
-                command.Parameters.Add(parameter);
-
-                using (DbDataReader reader = command.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        var dependent = new PackageDependent();
-                        dependent.Id = (string)reader["id"];
-                        dependent.DownloadCount = (int)reader["DownloadCount"];
-                        dependent.Description = (string)reader["Description"];
-                        packageDependentsList.Add(dependent);
-                    }
-                }
-            }
-            return packageDependentsList;
-        }
-
-        private int ShowDependentCount(string id, DbConnection connection)
-        {
-            int result = 0;
-
-            using (var command = connection.CreateCommand())
-            {
-                command.CommandText = @"SELECT COUNT(Distinct Packages.PackageRegistrationKey) AS DependentCount
-	                FROM PackageDependencies 
-	                INNER JOIN Packages ON Packages.[key] = PackageDependencies.PackageKey
-	                WHERE PackageDependencies.id = @id AND Packages.IsLatestSemVer2 = 1";
-
-                var parameter = command.CreateParameter();
-                parameter.ParameterName = "@id";
-                parameter.Value = id;
-
-
-                command.Parameters.Add(parameter);
-                using (DbDataReader reader = command.ExecuteReader())
-                {
-                    if (reader.Read())
-                    {
-
-                        result = (int)reader["DependentCount"];
-                    }
-                }
-            }
+            PackageDependents result = new PackageDependents();
+            result.PackageList = GetListOfDependents(id);
+            result.DependentCount = ShowDependentCount(id);
             return result;
+        }
+
+        private IReadOnlyCollection<PackageDependent> GetListOfDependents(String id)
+        {    
+            var revDepen = _entitiesContext.GetDatabase().SqlQuery<PackageDependent>(@"SELECT TOP 10 
+                    PackageRegistrations.id AS Id, PackageRegistrations.DownloadCount AS DownloadCount, Packages.Description AS Description
+                    FROM PackageDependencies INNER JOIN Packages ON Packages.[key] = PackageDependencies.PackageKey 
+                    INNER JOIN PackageRegistrations ON Packages.PackageRegistrationKey = PackageRegistrations.[key]
+                    WHERE PackageDependencies.id = @id AND Packages.IsLatestSemVer2 = 1
+                    GROUP BY PackageRegistrations.id, PackageRegistrations.DownloadCount, Packages.Description
+                    ORDER BY PackageRegistrations.DownloadCount DESC", new SqlParameter("@id", id)).ToList();
+            
+            return revDepen;
+        }
+
+        private int ShowDependentCount(string id)
+        {
+            var revDepen = _entitiesContext.GetDatabase().SqlQuery<int>(@"SELECT COUNT(Distinct Packages.PackageRegistrationKey) AS DependentCount
+	                FROM PackageDependencies 
+	                INNER JOIN Packages ON Packages.[key] = PackageDependencies.PackageKey
+	                WHERE PackageDependencies.id = @id AND Packages.IsLatestSemVer2 = 1", new SqlParameter("@id", id)).Single();
+
+            return revDepen;
         }
 
         public virtual IReadOnlyCollection<Package> FindPackagesById(

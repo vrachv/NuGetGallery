@@ -4,6 +4,7 @@
 using System;
 using System.Data.Common;
 using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -20,7 +21,7 @@ namespace NuGetGallery
         }
 
         public DbConnection Connection => _database.Connection;
-            
+
         public Task<int> ExecuteSqlCommandAsync(string sql, params object[] parameters)
         {
             return _database.ExecuteSqlCommandAsync(sql, parameters);
@@ -53,6 +54,11 @@ namespace NuGetGallery
             }
 
             return await ExecuteSqlCommandAsync(sqlCommand, parameters);
+        }
+
+        public DbRawSqlQuery<TElement> SqlQuery<TElement>(string sql, params object[] parameters)
+        {
+            return _database.SqlQuery<TElement>(sql, parameters);
         }
     }
 }
