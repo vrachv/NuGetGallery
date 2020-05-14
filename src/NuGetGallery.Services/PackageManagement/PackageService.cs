@@ -156,8 +156,17 @@ namespace NuGetGallery
             return result;
         }
 
-        private IReadOnlyCollection<PackageDependent> GetListOfDependents(String id)
-        {    
+        private IReadOnlyCollection<PackageDependent> GetListOfDependents(string id)
+        {
+            var listPackages = (from pd in _entitiesContext.PackageDependencies
+                                join p in _entitiesContext.Packages on pd.PackageKey equals p.Key
+                                join pr in _entitiesContext.PackageRegistrations on p.PackageRegistrationKey equals pr.Key
+                                where p.IsLatestSemVer2 && pd.Id == id
+                                group 1 by new { pr.Id, pr.DownloadCount, p.Description } into ng
+                                orderby ng.Key.DownloadCount descending
+                                select new { ng.Key.Id, ng.Key.DownloadCount, ng.Key.Description }
+                                ).Take(10).ToList();
+
             var revDepen = _entitiesContext.GetDatabase().SqlQuery<PackageDependent>(@"SELECT TOP 10 
                     PackageRegistrations.id AS Id, PackageRegistrations.DownloadCount AS DownloadCount, Packages.Description AS Description
                     FROM PackageDependencies INNER JOIN Packages ON Packages.[key] = PackageDependencies.PackageKey 
@@ -171,6 +180,12 @@ namespace NuGetGallery
 
         private int ShowDependentCount(string id)
         {
+            var totalCount = (from pd in _entitiesContext.PackageDependencies
+                              join p in _entitiesContext.Packages on pd.PackageKey equals p.Key
+                              where pd.Id == id && p.IsLatestSemVer2
+                              group 1 by p.PackageRegistrationKey
+                              ).Count();
+
             var revDepen = _entitiesContext.GetDatabase().SqlQuery<int>(@"SELECT COUNT(Distinct Packages.PackageRegistrationKey) AS DependentCount
 	                FROM PackageDependencies 
 	                INNER JOIN Packages ON Packages.[key] = PackageDependencies.PackageKey
