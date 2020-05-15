@@ -166,16 +166,8 @@ namespace NuGetGallery
                                 orderby ng.Key.DownloadCount descending
                                 select new { ng.Key.Id, ng.Key.DownloadCount, ng.Key.Description }
                                 ).Take(10).ToList();
-
-            var revDepen = _entitiesContext.GetDatabase().SqlQuery<PackageDependent>(@"SELECT TOP 10 
-                    PackageRegistrations.id AS Id, PackageRegistrations.DownloadCount AS DownloadCount, Packages.Description AS Description
-                    FROM PackageDependencies INNER JOIN Packages ON Packages.[key] = PackageDependencies.PackageKey 
-                    INNER JOIN PackageRegistrations ON Packages.PackageRegistrationKey = PackageRegistrations.[key]
-                    WHERE PackageDependencies.id = @id AND Packages.IsLatestSemVer2 = 1
-                    GROUP BY PackageRegistrations.id, PackageRegistrations.DownloadCount, Packages.Description
-                    ORDER BY PackageRegistrations.DownloadCount DESC", new SqlParameter("@id", id)).ToList();
             
-            return revDepen;
+            return listPackages;
         }
 
         private int ShowDependentCount(string id)
@@ -186,12 +178,7 @@ namespace NuGetGallery
                               group 1 by p.PackageRegistrationKey
                               ).Count();
 
-            var revDepen = _entitiesContext.GetDatabase().SqlQuery<int>(@"SELECT COUNT(Distinct Packages.PackageRegistrationKey) AS DependentCount
-	                FROM PackageDependencies 
-	                INNER JOIN Packages ON Packages.[key] = PackageDependencies.PackageKey
-	                WHERE PackageDependencies.id = @id AND Packages.IsLatestSemVer2 = 1", new SqlParameter("@id", id)).Single();
-
-            return revDepen;
+            return totalCount;
         }
 
         public virtual IReadOnlyCollection<Package> FindPackagesById(
