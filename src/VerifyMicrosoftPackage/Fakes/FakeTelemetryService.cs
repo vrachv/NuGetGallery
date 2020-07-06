@@ -18,7 +18,12 @@ namespace NuGet.VerifyMicrosoftPackage.Fakes
             throw new NotImplementedException();
         }
 
-        public void TrackABTestEnrollmentInitialized(int schemaVersion, int previewSearchBucket)
+        public void TrackABTestEnrollmentInitialized(int schemaVersion, int previewSearchBucket, int packageDependentBucket)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void TrackABTestEnrollmentUpgraded(int schemaVersion, int previewSearchBucket, int packageDepentsBucket)
         {
             throw new NotImplementedException();
         }
@@ -228,6 +233,11 @@ namespace NuGet.VerifyMicrosoftPackage.Fakes
             throw new NotImplementedException();
         }
 
+        public void TrackPackagePushDisconnectEvent()
+        {
+            throw new NotImplementedException();
+        }
+
         public void TrackPackagePushEvent(Package package, User user, IIdentity identity)
         {
             throw new NotImplementedException();
@@ -304,6 +314,11 @@ namespace NuGet.VerifyMicrosoftPackage.Fakes
         }
 
         public void TrackSymbolPackageFailedGalleryValidationEvent(string packageId, string packageVersion)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void TrackSymbolPackagePushDisconnectEvent()
         {
             throw new NotImplementedException();
         }

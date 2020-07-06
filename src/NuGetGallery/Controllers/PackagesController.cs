@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -799,6 +800,7 @@ namespace NuGetGallery
 
         // This additional delete action addresses issue https://github.com/NuGet/Engineering/issues/2866 - we need to error out.
         [HttpDelete]
+        [SuppressMessage("Microsoft.Security.Web.Configuration", "CA3147: Missing ValidateAntiForgeryTokenAttribute", Justification = "nuget.exe will not provide a token")]
         public HttpStatusCodeResult DisplayPackage() 
             => new HttpStatusCodeWithHeadersResult(HttpStatusCode.MethodNotAllowed, new NameValueCollection() { { "allow", "GET" } });
 
@@ -854,6 +856,13 @@ namespace NuGetGallery
             model.IsAtomFeedEnabled = _featureFlagService.IsPackagesAtomFeedEnabled();
             model.IsPackageDeprecationEnabled = _featureFlagService.IsManageDeprecationEnabled(currentUser, allVersions);
             model.IsPackageRenamesEnabled = _featureFlagService.IsPackageRenamesEnabled(currentUser);
+            model.IsPackageDependentsEnabled = _featureFlagService.IsPackageDependentsEnabled(currentUser) && 
+                _abTestService.IsPackageDependendentsABEnabled(currentUser);
+           
+            if (model.IsPackageDependentsEnabled)
+            {
+                model.PackageDependents = GetPackageDependents(id);
+            }
 
             if (model.IsGitHubUsageEnabled = _featureFlagService.IsGitHubUsageEnabled(currentUser))
             {
@@ -932,6 +941,38 @@ namespace NuGetGallery
 
             ViewBag.FacebookAppID = _config.FacebookAppId;
             return View(model);
+        }
+
+        private PackageDependents GetPackageDependents(string id)
+        {
+            PackageDependents dependents;
+
+            var cacheDependentsCacheKey = "CacheDependents_" + id.ToLowerInvariant();
+            var cacheDependents = HttpContext.Cache.Get(cacheDependentsCacheKey);
+
+            // Cache doesn't contain PackageDependents so PackageDependents gets put in the cache
+            if (cacheDependents == null)
+            {
+                dependents = _packageService.GetPackageDependents(id);
+
+                // note: this is a per instance cache
+                HttpContext.Cache.Add(
+                    cacheDependentsCacheKey,
+                    dependents,
+                    null,
+                    DateTime.UtcNow.AddSeconds(_contentObjectService.CacheConfiguration.PackageDependentsCacheTimeInSeconds),
+                    Cache.NoSlidingExpiration,
+                    CacheItemPriority.Default, null);
+            }
+
+            // Cache contains PackageDependents
+            else
+            {
+                dependents = (PackageDependents)cacheDependents;
+                // TODO Make cache time configurable / slidy
+                // https://github.com/NuGet/NuGetGallery/issues/4718
+            }
+            return dependents;
         }
 
         [HttpGet]

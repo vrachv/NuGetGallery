@@ -321,11 +321,23 @@ namespace NuGetGallery
                     };
 
                     yield return new object[] { "ABTestEnrollmentInitialized",
-                        (TrackAction)(s => s.TrackABTestEnrollmentInitialized(1, 42))
+                        (TrackAction)(s => s.TrackABTestEnrollmentInitialized(2, 42, 47))
+                    };
+
+                    yield return new object[] { "ABTestEnrollmentUpgraded",
+                        (TrackAction)(s => s.TrackABTestEnrollmentUpgraded(2, 42, 47))
                     };
 
                     yield return new object[] { "ABTestEvaluated",
                         (TrackAction)(s => s.TrackABTestEvaluated("SearchPreview", true, true, 0, 20))
+                    };
+
+                    yield return new object[] { "PackagePushDisconnect",
+                        (TrackAction)(s => s.TrackPackagePushDisconnectEvent())
+                    };
+
+                    yield return new object[] { "SymbolPackagePushDisconnect",
+                        (TrackAction)(s => s.TrackSymbolPackagePushDisconnectEvent())
                     };
                 }
             }

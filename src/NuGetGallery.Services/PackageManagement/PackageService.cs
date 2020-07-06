@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Data.Entity;
 using System.IO;
 using System.Linq;
@@ -24,6 +25,8 @@ namespace NuGetGallery
         private readonly IAuditingService _auditingService;
         private readonly ITelemetryService _telemetryService;
         private readonly ISecurityPolicyService _securityPolicyService;
+        private readonly IEntitiesContext _entitiesContext;
+        private const int packagesDisplayed = 5;
 
         public PackageService(
             IEntityRepository<PackageRegistration> packageRegistrationRepository,
@@ -31,12 +34,14 @@ namespace NuGetGallery
             IEntityRepository<Certificate> certificateRepository,
             IAuditingService auditingService,
             ITelemetryService telemetryService,
-            ISecurityPolicyService securityPolicyService)
+            ISecurityPolicyService securityPolicyService,
+            IEntitiesContext entitiesContext)
             : base(packageRepository, packageRegistrationRepository, certificateRepository)
         {
             _auditingService = auditingService ?? throw new ArgumentNullException(nameof(auditingService));
             _telemetryService = telemetryService ?? throw new ArgumentNullException(nameof(telemetryService));
             _securityPolicyService = securityPolicyService ?? throw new ArgumentNullException(nameof(securityPolicyService));
+            _entitiesContext = entitiesContext ?? throw new ArgumentNullException(nameof(entitiesContext));
         }
 
         /// <summary>
@@ -136,10 +141,48 @@ namespace NuGetGallery
         }
 
         public virtual IReadOnlyCollection<Package> FindPackagesById(
-            string id, 
+            string id,
             PackageDeprecationFieldsToInclude deprecationFields = PackageDeprecationFieldsToInclude.None)
         {
             return GetPackagesByIdQueryable(id, deprecationFields).ToList();
+        }
+
+        public PackageDependents GetPackageDependents(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                throw new ArgumentNullException(nameof(id));
+            }
+            
+            PackageDependents result = new PackageDependents();
+            result.TopPackages = GetListOfDependents(id);
+            result.TotalPackageCount = GetDependentCount(id);
+            return result;
+        }
+
+        private IReadOnlyCollection<PackageDependent> GetListOfDependents(string id)
+        {
+            var listPackages = (from pd in _entitiesContext.PackageDependencies
+                                join p in _entitiesContext.Packages on pd.PackageKey equals p.Key
+                                join pr in _entitiesContext.PackageRegistrations on p.PackageRegistrationKey equals pr.Key
+                                where p.IsLatestSemVer2 && pd.Id == id
+                                group 1 by new { pr.Id, pr.DownloadCount, pr.IsVerified, p.Description } into ng
+                                orderby ng.Key.DownloadCount descending
+                                select new PackageDependent { Id = ng.Key.Id, DownloadCount = ng.Key.DownloadCount, IsVerified = ng.Key.IsVerified, Description = ng.Key.Description }
+                                ).Take(packagesDisplayed).ToList();
+
+            return listPackages;
+        }
+
+        private int GetDependentCount(string id)
+        {
+            var totalCount = (from pd in _entitiesContext.PackageDependencies
+                              join p in _entitiesContext.Packages on pd.PackageKey equals p.Key
+                              where pd.Id == id && p.IsLatestSemVer2
+                              group 1 by p.PackageRegistrationKey
+                              ).Count();
+
+            return totalCount;
         }
 
         public virtual IReadOnlyCollection<Package> FindPackagesById(

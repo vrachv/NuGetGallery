@@ -32,6 +32,8 @@ namespace NuGetGallery
 
         void TrackPackagePushFailureEvent(string id, NuGetVersion version);
 
+        void TrackPackagePushDisconnectEvent();
+
         void TrackPackageUnlisted(Package package);
 
         void TrackPackageListed(Package package);
@@ -203,6 +205,11 @@ namespace NuGetGallery
         void TrackSymbolPackagePushFailureEvent(string packageId, string packageVersion);
 
         /// <summary>
+        /// A telemetry event emitted when a symbol package push failed due to client disconnect.
+        /// </summary>
+        void TrackSymbolPackagePushDisconnectEvent();
+
+        /// <summary>
         /// A telemetry event emitted when a symbol package fails Gallery validation.
         /// </summary>
         /// <param name="packageId">The id of the package that has the symbols uploaded.</param>
@@ -362,9 +369,22 @@ namespace NuGetGallery
         /// </summary>
         /// <param name="schemaVersion">The schema version.</param>
         /// <param name="previewSearchBucket">The bucket for the preview search test.</param>
+        /// <param name="packageDependentBucket">The bucket for the package dependents test</param>
         void TrackABTestEnrollmentInitialized(
             int schemaVersion,
-            int previewSearchBucket);
+            int previewSearchBucket,
+            int packageDependentBucket);
+
+        /// <summary>
+        /// Track when an A/B test enrollment is upgraded
+        /// </summary>
+        /// <param name="schemaVersion">The schema version.</param>
+        /// <param name="previewSearchBucket">The bucket for the preview search test.</param>
+        /// <param name="packageDependentBucket">The bucket for the package dependents test</param>
+        void TrackABTestEnrollmentUpgraded(
+            int schemaVersion,
+            int previewSearchBucket,
+            int packageDependentBucket);
 
         /// <summary>
         /// Track when an A/B test is evaluated.
