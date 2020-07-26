@@ -25,32 +25,41 @@ namespace NuGetGallery.OData
         ///     Determines the maximum number of packages returned in a single page of an OData result.
         /// </summary>
         internal const int MaxPageSize = 100;
-
-        public static SearchFilter GetSearchFilter(string q, int page, bool includePrerelease, string sortOrder, string context, string semVerLevel)
+        private static readonly IReadOnlyDictionary<string, SortOrder> SortOrders = new Dictionary<string, SortOrder>(StringComparer.OrdinalIgnoreCase)
         {
+            { GalleryConstants.AlphabeticSortOrder, SortOrder.TitleAscending },
+            { GalleryConstants.SearchSortNames.TitleAsc, SortOrder.TitleAscending },
+            { GalleryConstants.SearchSortNames.TitleDesc, SortOrder.TitleDescending },
+            { GalleryConstants.RecentSortOrder, SortOrder.Published },
+            { GalleryConstants.SearchSortNames.Published, SortOrder.Published },
+            { GalleryConstants.SearchSortNames.LastEdited, SortOrder.LastEdited },
+            { GalleryConstants.SearchSortNames.CreatedAsc, SortOrder.CreatedAscending },
+            { GalleryConstants.SearchSortNames.CreatedDesc, SortOrder.CreatedDescending },
+            { GalleryConstants.SearchSortNames.TotalDownloadsAsc, SortOrder.TotalDownloadsAscending },
+            { GalleryConstants.SearchSortNames.TotalDownloadsDesc, SortOrder.TotalDownloadsDescending },
+        };
+
+        public static SearchFilter GetSearchFilter(string q, int page, bool includePrerelease, string packageType, string sortOrder, string context, string semVerLevel)
+        {
+            page = page < 1 ? 1 : page; // pages are 1-based. 
+            packageType = packageType ?? string.Empty;
+
             var searchFilter = new SearchFilter(context)
             {
                 SearchTerm = q,
-                Skip = (page - 1) * GalleryConstants.DefaultPackageListPageSize, // pages are 1-based. 
+                Skip = (page - 1) * GalleryConstants.DefaultPackageListPageSize,
                 Take = GalleryConstants.DefaultPackageListPageSize,
                 IncludePrerelease = includePrerelease,
-                SemVerLevel = semVerLevel
+                SemVerLevel = semVerLevel,
+                PackageType = packageType,
             };
 
-            switch (sortOrder)
+            if (sortOrder == null || !SortOrders.TryGetValue(sortOrder, out var sortOrderValue))
             {
-                case GalleryConstants.AlphabeticSortOrder:
-                    searchFilter.SortOrder = SortOrder.TitleAscending;
-                    break;
-
-                case GalleryConstants.RecentSortOrder:
-                    searchFilter.SortOrder = SortOrder.Published;
-                    break;
-
-                default:
-                    searchFilter.SortOrder = SortOrder.Relevance;
-                    break;
+                sortOrderValue = SortOrder.Relevance;
             }
+
+            searchFilter.SortOrder = sortOrderValue;
 
             return searchFilter;
         }

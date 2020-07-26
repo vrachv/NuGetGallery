@@ -911,6 +911,7 @@ namespace NuGetGallery
                                 q: "id:\"" + normalizedRegistrationId + "\" AND version:\"" + package.Version + "\"",
                             page: 1,
                             includePrerelease: true,
+                            packageType: null,
                             sortOrder: null,
                             context: SearchFilter.ODataSearchContext,
                             semVerLevel: SemVerLevelKey.SemVerLevel2);
@@ -1133,9 +1134,28 @@ namespace NuGetGallery
 
             var isPreviewSearchEnabled = _abTestService.IsPreviewSearchEnabled(GetCurrentUser());
             var searchService = isPreviewSearchEnabled ? _searchServiceFactory.GetPreviewService() : _searchServiceFactory.GetService();
+            var isAdvancedSearchFlightEnabled = _featureFlagService.IsAdvancedSearchEnabled(GetCurrentUser());
+
+            // If advanced search is disabled, use the default experience
+            if (!isAdvancedSearchFlightEnabled || !searchService.SupportsAdvancedSearch)
+            {
+                searchAndListModel.SortBy = GalleryConstants.SearchSortNames.Relevance;
+                searchAndListModel.PackageType = string.Empty;
+            }
+
+            if (!IsSupportedSortBy(searchAndListModel.SortBy))
+            {
+                searchAndListModel.SortBy = GalleryConstants.SearchSortNames.Relevance;
+            }
+
+            var isDefaultSortBy = searchAndListModel.SortBy == null || string.Equals(searchAndListModel.SortBy, GalleryConstants.SearchSortNames.Relevance, StringComparison.OrdinalIgnoreCase);
+            var isDefaultPackageType = string.IsNullOrEmpty(searchAndListModel.PackageType);
+
+            // Cache when null or default value
+            var shouldCacheAdvancedSearch = isDefaultSortBy && isDefaultPackageType;
 
             // fetch most common query from cache to relieve load on the search service
-            if (string.IsNullOrEmpty(q) && page == 1 && includePrerelease)
+            if (string.IsNullOrEmpty(q) && page == 1 && includePrerelease && shouldCacheAdvancedSearch)
             {
                 var cacheKey = isPreviewSearchEnabled ? "DefaultPreviewSearchResults" : "DefaultSearchResults";
                 var cachedResults = HttpContext.Cache.Get(cacheKey);
@@ -1145,7 +1165,8 @@ namespace NuGetGallery
                         q,
                         page,
                         includePrerelease: includePrerelease,
-                        sortOrder: null,
+                        packageType: searchAndListModel.PackageType,
+                        sortOrder: searchAndListModel.SortBy,
                         context: SearchFilter.UISearchContext,
                         semVerLevel: SemVerLevelKey.SemVerLevel2);
 
@@ -1172,7 +1193,8 @@ namespace NuGetGallery
                     q,
                     page,
                     includePrerelease: includePrerelease,
-                    sortOrder: null,
+                    packageType: searchAndListModel.PackageType,
+                    sortOrder: searchAndListModel.SortBy,
                     context: SearchFilter.UISearchContext,
                     semVerLevel: SemVerLevelKey.SemVerLevel2);
 
@@ -1200,7 +1222,13 @@ namespace NuGetGallery
                 GalleryConstants.DefaultPackageListPageSize,
                 Url,
                 includePrerelease,
-                isPreviewSearchEnabled);
+                isPreviewSearchEnabled,
+                searchAndListModel.PackageType,
+                searchAndListModel.SortBy);
+
+            // If the experience hasn't been cached, it means it's not the default experienced, therefore, show the panel
+            viewModel.IsAdvancedSearchFlightEnabled = searchService.SupportsAdvancedSearch && isAdvancedSearchFlightEnabled;
+            viewModel.ShouldDisplayAdvancedSearchPanel =  !shouldCacheAdvancedSearch || !includePrerelease;
 
             ViewBag.SearchTerm = q;
 
@@ -2966,6 +2994,14 @@ namespace NuGetGallery
         private static HttpStatusCodeResult HttpForbidden()
         {
             return new HttpStatusCodeResult(HttpStatusCode.Forbidden, Strings.Unauthorized);
+        }
+
+        private static bool IsSupportedSortBy(string sortBy)
+        {
+            return sortBy != null && 
+                (string.Equals(sortBy, GalleryConstants.SearchSortNames.Relevance, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(sortBy, GalleryConstants.SearchSortNames.TotalDownloadsDesc, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(sortBy, GalleryConstants.SearchSortNames.CreatedDesc, StringComparison.OrdinalIgnoreCase));
         }
     }
 }

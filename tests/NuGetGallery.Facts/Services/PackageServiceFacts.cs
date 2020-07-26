@@ -4,11 +4,9 @@
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
-using System.Data.Entity.Migrations.Model;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Microsoft.Ajax.Utilities;
 using Moq;
 using NuGet.Frameworks;
 using NuGet.Packaging;
@@ -18,6 +16,7 @@ using NuGetGallery.Auditing;
 using NuGetGallery.Framework;
 using NuGetGallery.Packaging;
 using NuGetGallery.Security;
+using NuGetGallery.Services;
 using NuGetGallery.TestUtils;
 using Xunit;
 
@@ -33,7 +32,8 @@ namespace NuGetGallery
             Mock<ITelemetryService> telemetryService = null,
             Mock<ISecurityPolicyService> securityPolicyService = null,
             Action<Mock<PackageService>> setup = null,
-            Mock<IEntitiesContext> context = null)
+            Mock<IEntitiesContext> context = null,
+            Mock<IContentObjectService> contentObjectService = null)
         {
             packageRegistrationRepository = packageRegistrationRepository ?? new Mock<IEntityRepository<PackageRegistration>>();
             packageRepository = packageRepository ?? new Mock<IEntityRepository<Package>>();
@@ -43,6 +43,12 @@ namespace NuGetGallery
             securityPolicyService = securityPolicyService ?? new Mock<ISecurityPolicyService>();
             context = context ?? new Mock<IEntitiesContext>();
 
+            if (contentObjectService == null)
+            {
+                contentObjectService = new Mock<IContentObjectService>();
+                contentObjectService.Setup(x => x.QueryHintConfiguration).Returns(Mock.Of<IQueryHintConfiguration>());
+            }
+
             var packageService = new Mock<PackageService>(
                 packageRegistrationRepository.Object,
                 packageRepository.Object,
@@ -50,7 +56,8 @@ namespace NuGetGallery
                 auditingService,
                 telemetryService.Object,
                 securityPolicyService.Object,
-                context.Object);
+                context.Object,
+                contentObjectService.Object);
 
             packageService.CallBase = true;
 
@@ -2141,6 +2148,85 @@ namespace NuGetGallery
 
         public class TheGetPackageDependentsMethod
         {
+            [Fact]
+            public void AllQueriesShouldUseQueryHint()
+            {
+                string id = "foo";
+                var context = new Mock<IEntitiesContext>();
+                var entityContext = new FakeEntitiesContext();
+                var disposable = new Mock<IDisposable>();
+
+                var operations = new List<string>();
+
+                disposable
+                    .Setup(x => x.Dispose())
+                    .Callback(() => operations.Add(nameof(IDisposable.Dispose)));
+                context
+                    .Setup(x => x.WithQueryHint(It.IsAny<string>()))
+                    .Returns(() => disposable.Object)
+                    .Callback(() => operations.Add(nameof(EntitiesContext.WithQueryHint)));
+                context
+                    .Setup(f => f.PackageDependencies)
+                    .Returns(entityContext.PackageDependencies)
+                    .Callback(() => operations.Add(nameof(EntitiesContext.PackageDependencies)));
+                context
+                    .Setup(f => f.Packages)
+                    .Returns(entityContext.Packages)
+                    .Callback(() => operations.Add(nameof(EntitiesContext.Packages)));
+                context
+                    .Setup(f => f.PackageRegistrations)
+                    .Returns(entityContext.PackageRegistrations)
+                    .Callback(() => operations.Add(nameof(EntitiesContext.PackageRegistrations)));
+
+                var service = CreateService(context: context);
+
+                service.GetPackageDependents(id);
+
+                Assert.Equal(nameof(EntitiesContext.WithQueryHint), operations.First());
+                Assert.All(
+                    operations.Skip(1).Take(operations.Count - 2),
+                    o => Assert.Contains(
+                        o,
+                        new[]
+                        {
+                            nameof(EntitiesContext.PackageDependencies),
+                            nameof(EntitiesContext.Packages),
+                            nameof(EntitiesContext.PackageRegistrations),
+                        }));
+                Assert.Equal(nameof(IDisposable.Dispose), operations.Last());
+
+                disposable.Verify(x => x.Dispose(), Times.Once);
+                context.Verify(x => x.WithQueryHint(It.IsAny<string>()), Times.Once);
+                context.Verify(x => x.WithQueryHint("OPTIMIZE FOR UNKNOWN"), Times.Once);
+            }
+
+            [Fact]
+            public void UsesRecompileIfConfigured()
+            {
+                string id = "Newtonsoft.Json";
+
+                var context = new Mock<IEntitiesContext>();
+                var contentObjectService = new Mock<IContentObjectService>();
+                var queryHintConfiguration = new Mock<IQueryHintConfiguration>();
+                contentObjectService.Setup(x => x.QueryHintConfiguration).Returns(() => queryHintConfiguration.Object);
+                queryHintConfiguration.Setup(x => x.ShouldUseRecompileForPackageDependents(id)).Returns(true);
+
+                var entityContext = new FakeEntitiesContext();
+
+                context.Setup(f => f.PackageDependencies).Returns(entityContext.PackageDependencies);
+                context.Setup(f => f.Packages).Returns(entityContext.Packages);
+                context.Setup(f => f.PackageRegistrations).Returns(entityContext.PackageRegistrations);
+
+                var service = CreateService(context: context, contentObjectService: contentObjectService);
+
+                service.GetPackageDependents(id);
+
+                queryHintConfiguration.Verify(x => x.ShouldUseRecompileForPackageDependents(It.IsAny<string>()), Times.Once);
+                queryHintConfiguration.Verify(x => x.ShouldUseRecompileForPackageDependents(id), Times.Once);
+                context.Verify(x => x.WithQueryHint(It.IsAny<string>()), Times.Once);
+                context.Verify(x => x.WithQueryHint("RECOMPILE"), Times.Once);
+            }
+
             [Fact]
             public void ThereAreExactlyFivePackagesAndAllPackagesAreVerified()
             {

@@ -20,7 +20,9 @@ namespace NuGetGallery
             int pageSize,
             UrlHelper url,
             bool includePrerelease,
-            bool isPreviewSearch)
+            bool isPreviewSearch,
+            string packageType,
+            string sortBy)
         {
             PageIndex = pageIndex;
             IndexTimestampUtc = indexTimestampUtc;
@@ -33,11 +35,13 @@ namespace NuGetGallery
                 packageViewModels,
                 PageIndex,
                 pageCount,
-                page => url.PackageList(page, searchTerm, includePrerelease));
+                page => url.PackageList(page, searchTerm, includePrerelease, packageType, sortBy));
             Items = pager.Items;
             Pager = pager;
             IncludePrerelease = includePrerelease;
             IsPreviewSearch = isPreviewSearch;
+            PackageType = packageType;
+            SortBy = sortBy;
         }
 
         public int FirstResultIndex => 1 + (PageIndex * PageSize);
@@ -60,5 +64,13 @@ namespace NuGetGallery
         public bool IncludePrerelease { get; }
 
         public bool IsPreviewSearch { get; }
+
+        public string PackageType { get; set; }
+
+        public string SortBy { get; set; }
+
+        public bool ShouldDisplayAdvancedSearchPanel { get; set; }
+
+        public bool IsAdvancedSearchFlightEnabled { get; set; }
     }
 }
